@@ -4,7 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 admins = ["m1i1ha", "gleb_cataffs", "Danil_Cataffs"]
 
-TOKEN = "7059450347:AAFkpI7q1SAPPPjqXE738EfBhB0J7ByRJTs"
+TOKEN = "5762342430:AAG1Miw9VodQ00y4vvHxeZNmgAWHmriK6VQ"#7059450347:AAFkpI7q1SAPPPjqXE738EfBhB0J7ByRJTs
 bot = Bot(token = TOKEN)
 roles = ('Тимлид', 'Афф-менеджер', 'Кволити-менеджер')
 

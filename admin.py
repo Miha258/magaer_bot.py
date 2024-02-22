@@ -152,7 +152,7 @@ async def recive_manager_data(message: types.Message, state: FSMContext):
 
     if message.text == 'Тимлид':
         print([[types.KeyboardButton(team.name)] for team in session.query(Team).all()])
-        kb = types.ReplyKeyboardMarkup([[types.KeyboardButton(team.name)] for team in session.query(Team).all()])
+        kb = types.ReplyKeyboardMarkup([[types.KeyboardButton(team.name)] for team in session.query(Team).all()], resize_keyboard = True)
         await message.answer('Выберите команду для тимлида:', reply_markup = kb)
         await state.set_state(CreateUser.TEAM)
     else:
