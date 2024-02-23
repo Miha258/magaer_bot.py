@@ -19,38 +19,43 @@ async def start(message: types.Message, state: FSMContext):
 Список доступных команд:
 
 /create_manager - создать менеджера
-    Пример использования: /create_manager
+Пример использования: /create_manager
 
 /remove_manager - удалить менеджера
-    Параметры: /remove_manager <username>
-    Пример использования: /remove_manager @username
+Параметры: /remove_manager <username>
+Пример использования: /remove_manager @username
+
+
+/update_manager_score - обновить баллы
+Параметры: /update_manager_score <username> <число>
+Пример использования: /update_manager_score @user 3 или -3
 
 /stats - просмотр статистики отдела
-    Пример использования: /stats
+Пример использования: /stats
 
 /set_braketime - установить время перерыва для менеджера
-    Параметры: /set_braketime <username> <дата>
-    Пример использования: /set_braketime @username 2024.02.15-14:30
+Параметры: /set_braketime <username> <дата>
+Пример использования: /set_braketime @username 2024.02.15-14:30
 
 /set_workday_range - установить рабочее время для менеджера
-    Параметры: /set_workday_range @user <время_начала> <время_конца>
-    Пример использования: /set_workday_range @username 09:00 18:00
+Параметры: /set_workday_range @user <время_начала> <время_конца>
+Пример использования: /set_workday_range @username 09:00 18:00
 
 /update_role - обновить роль пользователя
-    Параметры: /update_role <username> <новая_роль>
-    Пример использования: /update_role @username Тимлид
+Параметры: /update_role <username> <новая_роль>
+Пример использования: /update_role @username Тимлид
 
 /create_team - создать команду
-    Параметры: /create_team <имя_команды>
-    Пример использования: /create_team Команда1
+Параметры: /create_team <имя_команды>
+Пример использования: /create_team Команда1
 
 /remove_team - удалить команду
-    Параметры: /remove_team <имя_команды> (Тимлид, Афф-менеджер, Кволити-менеджер)
-    Пример использования: /remove_team Команда1
+Параметры: /remove_team <имя_команды> (Тимлид, Афф-менеджер, Кволити-менеджер)
+Пример использования: /remove_team Команда1
 
 /send_message_to_chats - переслать сообщения по всем чатам
-    Параметры: /send_message_to_chats <текст>
-    Пример использования: /send_message_to_chats всем привет
+Параметры: /send_message_to_chats <текст>
+Пример использования: /send_message_to_chats всем привет
         """
         await message.answer(help_text)
     else:
