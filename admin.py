@@ -171,16 +171,21 @@ async def procces_create_manager(message: types.Message, state: FSMContext):
     else:
         data = await state.get_data()
         chat_member = message.forward_from
-        user = User(
-            id = chat_member.id,
-            name = "@" + chat_member.username,
-            role = data['role'],
-            team_id = data.get('team')
-        )
-        session.add(user)
-        session.commit()
-        await message.answer(f"{data['role']} успешно создан.")
-        await state.finish()
+        user = await session.query(User).filter_by(id = chat_member.id).first()
+        if not user:
+            user = User(
+                id = chat_member.id,
+                name = "@" + chat_member.username,
+                role = data['role'],
+                team_id = data.get('team')
+            )
+            session.add(user)
+            session.commit()
+            await message.answer(f"{data['role']} успешно создан.")
+            await state.finish()
+        else:
+            await message.answer('Менеджер уже зарегистрирован.Попробуйте другого пользователя:')
+        
 
 async def remove_manager(message: types.Message):
     try:
