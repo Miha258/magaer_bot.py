@@ -11,10 +11,23 @@ from quality_manager import register_quality_manager
 from manager import register_aff_manager
 from aiogram.dispatcher import FSMContext
 
+
 @dp.message_handler(commands=['start'], state = '*')
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
+    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     if message.from_user.username in admins:
+        buttons = [
+            types.KeyboardButton('Статистика'),
+            types.KeyboardButton('Обновить баллы менеджера'),
+            types.KeyboardButton('Установить время перерыва'),
+            types.KeyboardButton('Установить рабочее время'),
+            types.KeyboardButton('Обновить роль'),
+            types.KeyboardButton('Создать команду'),
+            types.KeyboardButton('Удалить команду'),
+            types.KeyboardButton('Отправить сообщение в чаты')
+        ]
+        keyboard.add(*buttons)
         help_text = """
 Список доступных команд:
 
@@ -85,7 +98,7 @@ async def start(message: types.Message, state: FSMContext):
 Например: /personal_stats
 (Так же есть возможность добаить бота в чат)
     """)
-
+                
 if __name__ == '__main__':
     register_admin(dp)
     register_teamlead(dp)

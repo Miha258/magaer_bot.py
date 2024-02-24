@@ -10,6 +10,42 @@ class CreateUser(StatesGroup):
     MESSAGE = State()
     TEAM = State()
 
+
+class Users(StatesGroup):
+    SET_USER = State()
+
+
+async def handle_option_choice(message: types.Message, state: FSMContext):
+    option = message.text.lower()
+    if option == 'Статистика':
+        await show_department_statistics(message)
+    elif option == 'Створити команду':
+        await create_team(message)
+    elif option == 'Видалити команду':
+        await remove_team(message)
+    elif option == 'Надіслати повідомлення в чати':
+        await send_message_to_department(message)
+
+
+# async def set_user(message: types.Message, state: FSMContext):
+#     action = message.text
+
+#     match action:
+#         pass
+
+async def update_manager_score_command(message: types.Message):
+    try:
+        command_parts = message.text.split()
+        user_id = command_parts[1]
+        score_to_update = int(command_parts[2])
+        user = session.query(User).filter_by(name = user_id).first()
+        if user:
+            session.add(User(name = user_id, score = user + score_to_update))
+            session.commit()
+    except IndexError:
+        await message.answer('Неправильное количество аргументов')
+
+
 async def update_manager_score(message: types.Message):
     try:
         command_parts = message.text.split()
@@ -21,6 +57,7 @@ async def update_manager_score(message: types.Message):
             session.commit()
     except IndexError:
         await message.answer('Неправильное количество аргументов')
+
 
 async def show_department_statistics(message: types.Message):
     response = "Статистика отдела:\n"
@@ -171,7 +208,7 @@ async def procces_create_manager(message: types.Message, state: FSMContext):
     else:
         data = await state.get_data()
         chat_member = message.forward_from
-        user = await session.query(User).filter_by(id = chat_member.id).first()
+        user = session.query(User).filter_by(id = chat_member.id).first()
         if not user:
             user = User(
                 id = chat_member.id,
@@ -247,16 +284,17 @@ async def remove_team(message: types.Message):
 
 
 def register_admin(dp: Dispatcher):
+    # dp.register_callback_query_handler(set_user, IsAdmin(), lambda m: m.text in ('Оновити бали менеджера', 'Встановити час перерви', 'Встановити робочий графік', 'Оновити роль'))
     dp.register_message_handler(create_manager, IsAdmin(), commands = ['create_manager'])
     dp.register_message_handler(recive_manager_data, IsAdmin(), lambda m: m.text in roles, state = CreateUser.USER_ROLE)
     dp.register_message_handler(set_manager_team, lambda m: m.text in [team.name for team in session.query(Team).all()], state = CreateUser.TEAM)
     dp.register_message_handler(procces_create_manager, IsAdmin(), state = CreateUser.MESSAGE)
     dp.register_message_handler(remove_manager, IsAdmin(), commands = ['remove_manager'])
-    dp.register_message_handler(update_manager_score, IsAdmin(), commands = ['update_manager_score'])
+    dp.register_message_handler(update_manager_score_command, IsAdmin(), commands = ['update_manager_score'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['stats'])
     dp.register_message_handler(set_braketime, IsAdmin(), commands = ['set_braketime'])
     dp.register_message_handler(set_workday_range, IsAdmin(), commands = ['set_workday_range'])
     dp.register_message_handler(update_user_role, IsAdmin(), commands = ['update_role'])
     dp.register_message_handler(create_team, IsAdmin(), commands = ['create_team'])
     dp.register_message_handler(remove_team, IsAdmin(), commands = ['remove_team'])
-    dp.register_message_handler(send_message_to_department, IsAdmin(), commands = ['send_message_to_chats'])
+    dp.register_message_handler(send_message_to_department, IsAdmin(), commands = ['send_message_to_chats']) 
