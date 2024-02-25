@@ -28,20 +28,20 @@ class Users(StatesGroup):
 async def handle_user_option(message: types.Message, state: FSMContext):
     await state.finish()
     option = message.text
-    match option:
-        case 'Статистика':
-            await show_department_statistics(message)
-        case 'Создать команду':
-            await state.set_state(Users.ADD_TEAM)
-            await message.answer('Введите название команды:')
-        case 'Удалить команду':
-            await state.set_state(Users.REMOVE_TEAM)
-            await message.answer('Введите название команды:')
-        case 'Отправить сообщение в чаты':
-            await state.set_state(Users.CHAT_MESSAGE)
-            await message.answer('Введите сообщения для отправки:')
-        case 'Создать менеджера':
-            await create_manager(message, state)
+    if option == 'Статистика':
+        await show_department_statistics(message)
+    elif option == 'Создать команду':
+        await state.set_state(Users.ADD_TEAM)
+        await message.answer('Введите название команды:')
+    elif option == 'Удалить команду':
+        await state.set_state(Users.REMOVE_TEAM)
+        await message.answer('Введите название команды:')
+    elif option == 'Отправить сообщение в чаты':
+        await state.set_state(Users.CHAT_MESSAGE)
+        await message.answer('Введите сообщения для отправки:')
+    elif option == 'Создать менеджера':
+        await create_manager(message, state)
+
 
 async def set_user(message: types.Message, state: FSMContext):
     await state.finish()
@@ -54,21 +54,20 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['username'] = message.text
         action = data['action']
-        match action:
-            case 'Обновить баллы менеджера':
-                await state.set_state(Users.SET_SCORE)
-                await message.answer('Введите сумму баллов:')
-            case 'Установить время перерыва':
-                await state.set_state(Users.SET_BRAKETIME)
-                await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode = 'html')
-            case 'Установить рабочее время':
-                await state.set_state(Users.SET_WORKDAY)
-                await message.answer('Введите дату в формате <strong>2024.02.28-20:15</strong>:', parse_mode = 'html')
-            case 'Обновить роль':
-                await state.set_state(Users.SET_ROLE)
-                await message.answer('Введите @username:')
-            case 'Удалить менеджера':
-                await remove_manager(message, state, message.text)
+        if action == 'Обновить баллы менеджера':
+            await state.set_state(Users.SET_SCORE)
+            await message.answer('Введите сумму баллов:')
+        elif action == 'Установить время перерыва':
+            await state.set_state(Users.SET_BRAKETIME)
+            await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
+        elif action == 'Установить рабочее время':
+            await state.set_state(Users.SET_WORKDAY)
+            await message.answer('Введите дату в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
+        elif action == 'Обновить роль':
+            await state.set_state(Users.SET_ROLE)
+            await message.answer('Введите @username:')
+        elif action == 'Удалить менеджера':
+            await remove_manager(message, state, message.text)
 
 async def create_team(message: types.Message, state: FSMContext):
     team_name = message.text
