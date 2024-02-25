@@ -2,6 +2,14 @@ from aiogram import types
 from config import *
 from utils import *
 from db import session, User, Team, Chat
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+
+
+class Teams(StatesGroup):
+    REMOVE_MEMBER = State()
+    ADD_MEMBER = State()
+
 
 async def show_team_statistics(message: types.Message):
     team_name = session.query(User).filter_by(id = message.from_id).first().team_id
@@ -18,7 +26,7 @@ async def show_team_statistics(message: types.Message):
     else:
         await message.answer("Команда с таким именем не найдена.")
 
-async def add_member_to_team(message: types.Message):
+async def add_member_to_team_command(message: types.Message):
     try:
         command_parts = message.text.split()
         team_name = session.query(User).filter_by(id = message.from_id).first().team_id
@@ -35,7 +43,7 @@ async def add_member_to_team(message: types.Message):
                     return await message.answer('Работник уже находиться в команде!')
                 user.team_id = team.name
                 session.commit()
-                await message.answer(f"Пользователь с username @{user_id} добавлен в команду {team_name}.")
+                await message.answer(f"Пользователь с username {user_id} добавлен в команду {team_name}.")
             else:
                 await message.answer("Пользователь с таким username не найден.")
         else:
@@ -43,13 +51,13 @@ async def add_member_to_team(message: types.Message):
     except IndexError:
         await message.answer('Неправильное количество аргументов.')
 
-async def remove_member_from_team(message: types.Message):
+async def remove_member_from_team_command(message: types.Message):
     try:
         command_parts = message.text.split()
-        team_name = team_name = session.query(User).filter_by(id = message.from_id).first().team_id
+        team_name = session.query(User).filter_by(id = message.from_id).first().team_id
         user_id = command_parts[1]
-        user = session.query(User).filter_by(name=user_id).first()
-        team = session.query(Team).filter_by(name=team_name).first()
+        user = session.query(User).filter_by(name = user_id).first()
+        team = session.query(Team).filter_by(name = team_name).first()
         if team:
             if user:
                 if user.role == 'Тимлид':
@@ -59,7 +67,7 @@ async def remove_member_from_team(message: types.Message):
                     return await message.answer('Работник не в вашей команде!')
                 user.team_id = None
                 session.commit()
-                await message.answer(f"Пользователь с username @{user_id} удален из команды {team_name}.")
+                await message.answer(f"Пользователь с username {user_id} удален из команды {team_name}.")
             else:
                 await message.answer("Пользователь с таким username не найден.")
         else:
@@ -93,8 +101,65 @@ async def add_bot_to_chat(message: types.Message):
         session.delete(existing_chat)
         session.commit()
     
+
+async def handle_user_option(message: types.Message, state: FSMContext):
+    action = message.text
+    await message.answer('Введите @username:')
+    match action:
+        case 'Добавить в команду':
+            await state.set_state(Teams.ADD_MEMBER)
+        case 'Удалить из команды':
+            await state.set_state(Teams.REMOVE_MEMBER)
+
+
+async def add_member_to_team(message: types.Message, state: FSMContext):
+    team_name = session.query(User).filter_by(id = message.from_id).first().team_id
+    user_id = message.text
+    user = session.query(User).filter_by(name = user_id).first()
+    team = session.query(Team).filter_by(name = team_name).first()
+    if team:
+        if user:
+            if user.role == 'Тимлид':
+                return await message.answer('У вас нет доступа для добавления тимлида!')
+            
+            if user.team_id != None:
+                return await message.answer('Работник уже находиться в команде!')
+            user.team_id = team.name
+            session.commit()
+            await state.finish()
+            await message.answer(f"Пользователь с username {user_id} добавлен в команду {team.name}.")
+        else:
+            await message.answer("Пользователь с таким username не найден.")
+    else:
+        await message.answer("Команда с таким именем,как у вас,не найдена.")
+
+async def remove_member_from_team(message: types.Message, state: FSMContext):
+    team_name = session.query(User).filter_by(id = message.from_id).first().team_id
+    user_id = message.text
+    user = session.query(User).filter_by(name = user_id).first()
+    team = session.query(Team).filter_by(name = team_name).first()
+    if team:
+        if user:
+            if user.role == 'Тимлид':
+                return await message.answer('У вас нет доступа для удаления тимлида!')
+            
+            if user.team_id != team_name:
+                return await message.answer('Работник не в вашей команде!')
+            user.team_id = None
+            session.commit()
+            await state.finish()
+            await message.answer(f"Пользователь с username {user_id} удален из команды {team_name}.")
+        else:
+            await message.answer("Пользователь с таким username не найден.")
+    else:
+        await message.answer("Команда с таким именем,как у вас,не найдена.")
+
+
 def register_teamlead(dp: Dispatcher):
-    dp.register_message_handler(show_team_statistics, IsTeamlead(), commands=['team_stats'])
-    dp.register_message_handler(add_member_to_team, IsTeamlead(), commands=['add_member_to_team'])
-    dp.register_message_handler(remove_member_from_team, IsTeamlead(), commands=['remove_member_from_team'])
+    dp.register_message_handler(show_team_statistics, IsTeamlead(), lambda m: m.text in ('/team_stats', 'Статистика команды'))
+    dp.register_message_handler(add_member_to_team_command, IsTeamlead(), commands=['add_member_to_team'])
+    dp.register_message_handler(remove_member_from_team_command, IsTeamlead(), commands=['remove_member_from_team'])
+    dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды'))
+    dp.register_message_handler(add_member_to_team, IsTeamlead(), state = Teams.ADD_MEMBER)
+    dp.register_message_handler(remove_member_from_team, IsTeamlead(), state = Teams.REMOVE_MEMBER)
     dp.register_message_handler(add_bot_to_chat, lambda m: m.new_chat_members[0].id == bot.id if m.new_chat_members else m.left_chat_member.id == bot.id if m.left_chat_member else False, content_types = types.ContentTypes.NEW_CHAT_MEMBERS | types.ContentTypes.LEFT_CHAT_MEMBER)

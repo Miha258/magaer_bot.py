@@ -10,24 +10,12 @@ from team_manager import register_teamlead
 from quality_manager import register_quality_manager
 from manager import register_aff_manager
 from aiogram.dispatcher import FSMContext
-
+from keyboards import *
 
 @dp.message_handler(commands=['start'], state = '*')
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
-    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     if message.from_user.username in admins:
-        buttons = [
-            types.KeyboardButton('Статистика'),
-            types.KeyboardButton('Обновить баллы менеджера'),
-            types.KeyboardButton('Установить время перерыва'),
-            types.KeyboardButton('Установить рабочее время'),
-            types.KeyboardButton('Обновить роль'),
-            types.KeyboardButton('Создать команду'),
-            types.KeyboardButton('Удалить команду'),
-            types.KeyboardButton('Отправить сообщение в чаты')
-        ]
-        keyboard.add(*buttons)
         help_text = """
 Список доступных команд:
 
@@ -70,7 +58,7 @@ async def start(message: types.Message, state: FSMContext):
 Параметры: /send_message_to_chats <текст>
 Пример использования: /send_message_to_chats всем привет
         """
-        await message.answer(help_text)
+        await message.answer(help_text, reply_markup = get_admin_kb())
     else:
         user = session.query(User).filter_by(id = message.from_id).first()
         if user:
@@ -86,7 +74,7 @@ async def start(message: types.Message, state: FSMContext):
 
 /remove_member_from_team <username> - удалить пользователя из команды.
 Например: /remove_member_from_team @username
-    """)
+    """, reply_markup = get_teamlead_kb())
             elif user.role == 'Кволити-менеджер':
                 await message.answer("""
 /stats - просмотр статистики отдела.
