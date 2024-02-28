@@ -69,6 +69,7 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
         elif action == 'Удалить менеджера':
             await remove_manager(message, state, message.text)
 
+
 async def create_team(message: types.Message, state: FSMContext):
     team_name = message.text
     team = session.query(Team).filter_by(name = team_name).first()
