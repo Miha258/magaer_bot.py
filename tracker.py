@@ -3,8 +3,7 @@ from datetime import datetime
 from aiogram import types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import *
-from db import User, Chat, session
-from random import choice
+from db import User, Chat, session, WeeklyStats, MonthlyStats
 
 class CheckManagerDelay(StatesGroup):
     AWAITING_REPLY = State()
@@ -30,13 +29,13 @@ async def check_manager_delay(message: types.Message):
         await asyncio.sleep(10)
         if last_message.message_id == message.message_id:
             manager = session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').first()
-            await last_message.answer(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! @{manager.name}")
+            await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
             if manager.paused < datetime.now():
                 await remove_score(manager.id, 1)
             await asyncio.sleep(10)
             if last_message.message_id == message.message_id:
                 team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
-                await last_message.answer(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
+                await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                 if manager.paused < datetime.now():
                     await remove_score(manager.id, 1)
                 await asyncio.sleep(10)
@@ -45,8 +44,7 @@ async def check_manager_delay(message: types.Message):
                         await remove_score(manager.id, 5)
                     if team_lead.paused < datetime.now():
                         await remove_score(team_lead.id, 3)
-                    random_admin = choice(admins)
-                    await last_message.answer(f"Приносим извинения за задержку {team_lead.name} {manager.name} {random_admin}")
+                    await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
 
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
@@ -54,7 +52,7 @@ async def remove_score(user_id: int, score: int):
         user.quality_score -= score
         session.commit()
 
-async def calculate_average_reply_time(message: types.Message):
+def calculate_average_reply_time(message: types.Message):
     user_id = message.from_user.id
     user = session.query(User).filter_by(id=user_id).first()
     if user:
@@ -72,6 +70,8 @@ async def calculate_average_reply_time(message: types.Message):
             else:
                 user.average_reply_time = reply_time.total_seconds() / 60
         session.commit()
+        WeeklyStats.update(session, user_id)
+        MonthlyStats.update(session, user_id)
 
 
 

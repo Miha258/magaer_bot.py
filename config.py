@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
+head = "@Danil_Cataffs"
 admins = ["m1i1ha", "gleb_cataffs", "Danil_Cataffs"]
 
 TOKEN = "7059450347:AAFkpI7q1SAPPPjqXE738EfBhB0J7ByRJTs"#7059450347:AAFkpI7q1SAPPPjqXE738EfBhB0J7ByRJTs
