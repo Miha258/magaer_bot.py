@@ -27,13 +27,13 @@ async def check_manager_delay(message: types.Message):
     chat = session.query(Chat).filter_by(chat_id = message.chat.shifted_id).first()
     if not user and chat:
         if message.text.endswith('?'):
-            await asyncio.sleep(3600)
+            await asyncio.sleep(1800)
             if last_message.message_id == message.message_id:
                 manager = session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').first()
                 await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                 if manager.paused < datetime.now():
                     await remove_score(manager.id, 1)
-                await asyncio.sleep(1800)
+                await asyncio.sleep(3600)
                 if last_message.message_id == message.message_id:
                     team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
                     await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
