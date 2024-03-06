@@ -2,7 +2,7 @@ from aiogram import types
 from config import *
 from utils import *
 from db import session, User
-
+from keyboards import *
 
 async def show_department_statistics(message: types.Message):
     response = "Статистика отдела:\n"
@@ -17,3 +17,5 @@ async def show_department_statistics(message: types.Message):
 
 def register_quality_manager(dp: Dispatcher):
     dp.register_message_handler(show_department_statistics, IsQualityManager(), commands=['stats'])
+    dp.register_message_handler(show_department_statistics, IsQualityManager(), commands=['weekly_stats'])
+    dp.register_message_handler(show_department_statistics, IsQualityManager(), commands=['monthly_stats'])

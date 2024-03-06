@@ -23,13 +23,20 @@ class Users(StatesGroup):
     REMOVE_TEAM = State()
     REMOVE_MANAGER = State()
     CHAT_MESSAGE = State()
+    CHOOSE_STATS_TYPE = State()
 
 
 async def handle_user_option(message: types.Message, state: FSMContext):
     await state.finish()
     option = message.text
     if option == 'Статистика':
-        await show_department_statistics(message)
+        await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
+            [
+             [types.KeyboardButton('За месец')],
+             [types.KeyboardButton('За недалю')]
+            ]
+        ))
+        await state.set_state(Users.CHOOSE_STATS_TYPE)
     elif option == 'Создать команду':
         await state.set_state(Users.ADD_TEAM)
         await message.answer('Введите название команды:')
@@ -42,6 +49,10 @@ async def handle_user_option(message: types.Message, state: FSMContext):
     elif option == 'Создать менеджера':
         await create_manager(message, state)
 
+async def choose_statistic(message: types.Message, state: FSMContext):
+    await show_department_statistics(message)
+    await state.finish()
+    
 
 async def set_user(message: types.Message, state: FSMContext):
     await state.finish()
@@ -114,7 +125,7 @@ async def set_score(message: types.Message, state: FSMContext):
         score_to_update = int(message.text)
         user = session.query(User).filter_by(name = data["username"]).first()
         if user:
-            session.add(User(name = data["username"], quality_score = user.quality_score + score_to_update))
+            user.quality_score = user.quality_score + score_to_update
             session.commit()
             await state.finish()
             await message.answer(f'Сумма баллов для {data["username"]} успешно изменена')
@@ -193,7 +204,7 @@ async def send_message_to_department(message: types.Message, state: FSMContext):
             await bot.send_message(chat.chat_id, message_text)
             counter += 1
         except Exception as e:
-            print(f"Ошибка при отправке сообщения в чат {chat.chat_id}: {e}")
+            await message.answer(f"Ошибка при отправке сообщения в чат {chat.chat_id}: {e}")
     await message.answer(f'Количество отправленных сообщений: <strong>{counter}</strong>', parse_mode = "html")
    
 
@@ -232,7 +243,7 @@ async def show_department_statistics(message: types.Message):
         avrg_time = member.average_reply_time / 60 if member.average_reply_time else 0
         braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
         response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время рабочего:</strong> {avrg_worktime:.2f}мин, <strong>Среднее время ответа:</strong> {avrg_time:.2f}мин{braketime}\n\n"
-    await message.answer(response, parse_mode = 'html')
+    await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
 
 async def send_message_to_department_command(message: types.Message):
@@ -427,6 +438,7 @@ async def remove_team_command(message: types.Message):
 
 
 def register_admin(dp: Dispatcher):
+    dp.register_message_handler(choose_statistic, state = Users.CHOOSE_STATS_TYPE)
     dp.register_message_handler(set_user, IsAdmin(), lambda m: m.text in ('Обновить баллы менеджера', 'Установить время перерыва', 'Установить рабочее время', 'Обновить роль', 'Удалить менеджера'), state = "*")
     dp.register_message_handler(set_score, IsAdmin(), state = Users.SET_SCORE)
     dp.register_message_handler(set_braketime, IsAdmin(), state = Users.SET_BRAKETIME)
@@ -445,6 +457,9 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(remove_manager_command, IsAdmin(), commands = ['remove_manager'])
     dp.register_message_handler(update_manager_score_command, IsAdmin(), commands = ['update_manager_score'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['stats'])
+    dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['weekly_stats'])
+    dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['monthly_stats'])
+
     dp.register_message_handler(set_braketime, IsAdmin(), commands = ['set_braketime'])
     dp.register_message_handler(set_workday_range_command, IsAdmin(), commands = ['set_workday_range'])
     dp.register_message_handler(update_user_role, IsAdmin(), commands = ['update_role'])

@@ -34,6 +34,12 @@ async def start(message: types.Message, state: FSMContext):
 /stats - просмотр статистики отдела
 Пример использования: /stats
 
+/monthly_stats -  просмотр статистики отдела (за месец)
+Пример использования: /monthly_stats
+
+/weekly_stats -  просмотр статистики отдела (за неделю)
+Пример использования: /weekly_stats
+
 /set_braketime - установить время перерыва для менеджера
 Параметры: /set_braketime <username> <дата>
 Пример использования: /set_braketime @username 2024.02.15-14:30
@@ -66,8 +72,14 @@ async def start(message: types.Message, state: FSMContext):
                 await message.answer("""
 Список доступных команд:
 
-/team_stats - показать статистику команды по указанному названию.
+/team_stats - показать статистику команды.
 Например: /team_stats
+                                     
+/team_stats_monthly -  просмотр статистики команды (за месец)
+Пример использования: /team_stats_monthly
+
+/team_stats_weeekly -  просмотр статистики команды (за неделю)
+Пример использования: /team_stats_weeekly
 
 /add_member_to_team <username> - добавить пользователя в команду.
 Например: /add_member_to_team @username
@@ -79,6 +91,12 @@ async def start(message: types.Message, state: FSMContext):
                 await message.answer("""
 /stats - просмотр статистики отдела.
 Например: /stats
+                                     
+/monthly_stats -  просмотр статистики отдела (за месец)
+Пример использования: /monthly_stats
+
+/weekly_stats -  просмотр статистики отдела (за неделю)
+Пример использования: /weekly_stats
     """)    
             elif user.role == 'Афф-менеджер':
                 await message.answer("""

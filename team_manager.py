@@ -4,11 +4,12 @@ from utils import *
 from db import session, User, Team, Chat
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-
+from keyboards import get_teamlead_kb
 
 class Teams(StatesGroup):
     REMOVE_MEMBER = State()
     ADD_MEMBER = State()
+    CHOOSE_STATS_TYPE = State()
 
 
 async def show_team_statistics(message: types.Message):
@@ -22,7 +23,7 @@ async def show_team_statistics(message: types.Message):
             avrg_time = member.average_reply_time / 60 if member.average_reply_time else 0
             braketime = ", <strong>Прерван до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
             response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Сред.Рабочее:</strong> {avrg_worktime:.2f}мин, <strong>Сред.Нерабочее:</strong> {avrg_time:.2f}мин{braketime}\n\n"
-        await message.answer(response, parse_mode='html')
+        await message.answer(response, parse_mode='html', reply_markup = get_teamlead_kb())
     else:
         await message.answer("Команда с таким именем не найдена.")
 
@@ -109,6 +110,8 @@ async def handle_user_option(message: types.Message, state: FSMContext):
         await state.set_state(Teams.ADD_MEMBER)
     elif action == 'Удалить из команды':
         await state.set_state(Teams.REMOVE_MEMBER)
+    elif action == 'Статистика команды':
+        await state.set_state(Teams.CHOOSE_STATS_TYPE)
 
 
 
@@ -155,11 +158,18 @@ async def remove_member_from_team(message: types.Message, state: FSMContext):
         await message.answer("Команда с таким именем,как у вас,не найдена.")
 
 
+async def choose_statistic(message: types.Message, state: FSMContext):
+    await show_team_statistics(message)
+    await state.finish()
+
 def register_teamlead(dp: Dispatcher):
-    dp.register_message_handler(show_team_statistics, IsTeamlead(), lambda m: m.text in ('/team_stats', 'Статистика команды'))
+    dp.register_message_handler(choose_statistic, state = Teams.CHOOSE_STATS_TYPE)
+    dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats'])
+    dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats_monthly'])
+    dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats_weeekly'])
     dp.register_message_handler(add_member_to_team_command, IsTeamlead(), commands=['add_member_to_team'])
     dp.register_message_handler(remove_member_from_team_command, IsTeamlead(), commands=['remove_member_from_team'])
-    dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды'))
+    dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды', 'Статистика команды'))
     dp.register_message_handler(add_member_to_team, IsTeamlead(), state = Teams.ADD_MEMBER)
     dp.register_message_handler(remove_member_from_team, IsTeamlead(), state = Teams.REMOVE_MEMBER)
     dp.register_message_handler(add_bot_to_chat, lambda m: m.new_chat_members[0].id == bot.id if m.new_chat_members else m.left_chat_member.id == bot.id if m.left_chat_member else False, content_types = types.ContentTypes.NEW_CHAT_MEMBERS | types.ContentTypes.LEFT_CHAT_MEMBER)

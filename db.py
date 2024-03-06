@@ -39,8 +39,7 @@ class Stats(Base):
     __abstract__ = True
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
-    start_work_at = Column(Time, default = time(0, 0))
-    end_work_at = Column(Time, default = time(23, 0))
+    quality_score = Column(Integer, default=100)
     average_reply_time = Column(Integer, default = 0)
     average_reply_worktime = Column(Integer, default = 0)
 
