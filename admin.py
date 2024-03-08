@@ -70,10 +70,10 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
             await message.answer('Введите сумму баллов:')
         elif action == 'Установить время перерыва':
             await state.set_state(Users.SET_BRAKETIME)
-            await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
+            await message.answer('Введите дату (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
         elif action == 'Установить рабочее время':
             await state.set_state(Users.SET_WORKDAY)
-            await message.answer('Введите дату в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
+            await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
         elif action == 'Обновить роль':
             await state.set_state(Users.SET_ROLE)
             await message.answer('Введите @username:')
@@ -159,7 +159,7 @@ async def set_workday_range(message: types.Message, state: FSMContext):
         end_time = is_valid_time(end_time)
 
         if not start_time or not end_time:
-            return await message.answer("Неправильный формат даты. Пожалуйста, используйте формат 'YYYY.MM.DD HH:MM'.")
+            return await message.answer("Неправильный формат даты. Пожалуйста, используйте формат <strong>00:00-00:00</strong>.")
         
         user = session.query(User).filter_by(name = data['username']).first()
         if user:
@@ -242,7 +242,7 @@ async def show_department_statistics(message: types.Message):
         avrg_worktime = member.average_reply_worktime / 60 if member.average_reply_worktime else 0 
         avrg_time = member.average_reply_time / 60 if member.average_reply_time else 0
         braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
-        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время рабочего:</strong> {avrg_worktime:.2f}мин, <strong>Среднее время ответа:</strong> {avrg_time:.2f}мин{braketime}\n\n"
+        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime:.2f}мин, <strong>Среднее время ответа в не рабочее время:</strong> {avrg_time:.2f}мин{braketime}\n\n"
     await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
 
@@ -287,14 +287,12 @@ async def set_workday_range_command(message: types.Message):
     try:
         command_parts = message.text.split()
         user_id = command_parts[1]
-        start_time = command_parts[2]
-        end_time = command_parts[3]
+        start_time, end_time = command_parts[2].split('-')
         start_time = is_valid_time(start_time)
         end_time = is_valid_time(end_time)
-        if not user_id.isdigit():
-            await message.answer("Неправильный формат username. Username должен состоять только из цифр.")
+        
         if not start_time or not end_time:
-            return await message.answer("Неправильный формат даты. Пожалуйста, используйте формат 'YYYY.MM.DD HH:MM'.")
+            return await message.answer("Неправильный формат время. Пожалуйста, используйте формат <strong>00:00 00:00</strong>.", parse_mode = 'html')
         
         user = session.query(User).filter_by(name = user_id).first()
         if user:
@@ -460,7 +458,7 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['weekly_stats'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['monthly_stats'])
 
-    dp.register_message_handler(set_braketime, IsAdmin(), commands = ['set_braketime'])
+    dp.register_message_handler(set_braketime_command, IsAdmin(), commands = ['set_braketime'])
     dp.register_message_handler(set_workday_range_command, IsAdmin(), commands = ['set_workday_range'])
     dp.register_message_handler(update_user_role, IsAdmin(), commands = ['update_role'])
     dp.register_message_handler(create_team_command, IsAdmin(), commands = ['create_team'])

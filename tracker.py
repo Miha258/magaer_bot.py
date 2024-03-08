@@ -20,11 +20,12 @@ async def send_message_with_delay(chat_id: int, message: str):
 
 async def check_manager_delay(message: types.Message):
     global last_message
-    last_message = message
+    if last_message != message:
+        last_message = message
     
     user_id = message.from_user.id
     user = session.query(User).filter_by(id = user_id).first()
-    chat = session.query(Chat).filter_by(chat_id = message.chat.shifted_id).first()
+    chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
     if not user and chat:
         if message.text.endswith('?'):
             await asyncio.sleep(1800)
@@ -46,6 +47,10 @@ async def check_manager_delay(message: types.Message):
                         if team_lead.paused < datetime.now():
                             await remove_score(team_lead.id, 3)
                         await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+    elif user and chat:
+        if not message.text.endswith('?'):
+            if not session.query(User).filter_by(id = last_message.from_id).first():
+                calculate_average_reply_time(message, last_message)
 
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
@@ -53,11 +58,11 @@ async def remove_score(user_id: int, score: int):
         user.quality_score -= score
         session.commit()
 
-def calculate_average_reply_time(message: types.Message):
+def calculate_average_reply_time(message: types.Message, reply_to_message: types.Message):
     user_id = message.from_user.id
     user = session.query(User).filter_by(id=user_id).first()
     if user:
-        reply_time = message.date - message.reply_to_message.date
+        reply_time = message.date - reply_to_message.date
         start_work_time = user.start_work_at
         end_work_time = user.end_work_at
         if start_work_time <= message.date.time() <= end_work_time:
@@ -71,11 +76,8 @@ def calculate_average_reply_time(message: types.Message):
             else:
                 user.average_reply_time = reply_time.total_seconds() / 60
         session.commit()
-        WeeklyStats.update(session, user_id)
-        MonthlyStats.update(session, user_id)
 
 
 
 def register_tracker(dp: Dispatcher):
     dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup'), content_types = types.ContentTypes.TEXT | types.ContentTypes.PHOTO | types.ContentTypes.VIDEO, state="*")
-    dp.register_message_handler(calculate_average_reply_time, lambda m: m.reply_to_message is not None, content_types = types.ContentType.ANY, state="*")
