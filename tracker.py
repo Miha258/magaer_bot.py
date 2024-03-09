@@ -9,7 +9,7 @@ class CheckManagerDelay(StatesGroup):
     AWAITING_REPLY = State()
 
 timeouts = {}
-last_message = None
+last_messages = {}
 
 
 async def send_message_with_delay(chat_id: int, message: str):
@@ -19,38 +19,45 @@ async def send_message_with_delay(chat_id: int, message: str):
         print(f"Error sending message to chat {chat_id}: {e}")
 
 async def check_manager_delay(message: types.Message):
-    global last_message
-    if last_message != message:
-        last_message = message
-    
-    user_id = message.from_user.id
-    user = session.query(User).filter_by(id = user_id).first()
-    chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
-    if not user and chat:
-        if message.text.endswith('?'):
-            await asyncio.sleep(1800)
-            if last_message.message_id == message.message_id:
-                manager = session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').first()
-                await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
-                if manager.paused < datetime.now():
-                    await remove_score(manager.id, 1)
-                await asyncio.sleep(3600)
-                if last_message.message_id == message.message_id:
-                    team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
-                    await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
+    # if datetime.today().weekday() >= 5:
+        last_message: types.Message = last_messages.get(message.chat.id)
+        if not last_message:
+            last_messages[message.chat.id] = message
+            last_message = message
+        elif last_message.message_id != message.message_id:
+            last_messages[message.chat.id] = message
+
+        user_id = message.from_user.id
+        user = session.query(User).filter_by(id = user_id).first()
+        chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
+        if not user and chat:
+            if message.text.endswith('?'):
+                print('waiting')
+                await asyncio.sleep(10)
+                if last_messages.get(message.chat.id).message_id == message.message_id:
+                    manager = session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').first()
+                    await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                     if manager.paused < datetime.now():
                         await remove_score(manager.id, 1)
-                    await asyncio.sleep(3600)
-                    if last_message.message_id == message.message_id:
+                    await asyncio.sleep(15)
+                    if last_messages.get(message.chat.id).message_id == message.message_id:
+                        team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
+                        await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                         if manager.paused < datetime.now():
-                            await remove_score(manager.id, 5)
-                        if team_lead.paused < datetime.now():
-                            await remove_score(team_lead.id, 3)
-                        await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
-    elif user and chat:
-        if not message.text.endswith('?'):
-            if not session.query(User).filter_by(id = last_message.from_id).first():
-                calculate_average_reply_time(message, last_message)
+                            await remove_score(manager.id, 1)
+                        await asyncio.sleep(20)
+                        if last_messages.get(message.chat.id).message_id == message.message_id:
+                            if manager.paused < datetime.now():
+                                await remove_score(manager.id, 5)
+                            if team_lead.paused < datetime.now():
+                                await remove_score(team_lead.id, 3)
+                            await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+        elif user and chat:
+            if not message.text.endswith('?'):
+                print(last_message.message_id, message.message_id)
+                if not session.query(User).filter_by(id = last_message.from_id).first():
+                    print('calculated')
+                    calculate_average_reply_time(last_message, message)
 
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
@@ -59,22 +66,23 @@ async def remove_score(user_id: int, score: int):
         session.commit()
 
 def calculate_average_reply_time(message: types.Message, reply_to_message: types.Message):
-    user_id = message.from_user.id
+    user_id = reply_to_message.from_user.id
     user = session.query(User).filter_by(id=user_id).first()
     if user:
-        reply_time = message.date - reply_to_message.date
+        reply_time = (reply_to_message.date - message.date).total_seconds()
         start_work_time = user.start_work_at
         end_work_time = user.end_work_at
         if start_work_time <= message.date.time() <= end_work_time:
             if user.average_reply_worktime:
-                user.average_reply_worktime = (user.average_reply_worktime + reply_time.total_seconds() / 60) / 2
+                user.average_reply_worktime = (user.average_reply_worktime + reply_time / 60) / 2
             else:
-                user.average_reply_worktime = reply_time.total_seconds() / 60
+                user.average_reply_worktime = reply_time / 60
         else:
             if user.average_reply_time:
-                user.average_reply_time = (user.average_reply_time + reply_time.total_seconds() / 60) / 2
+                user.average_reply_time = (user.average_reply_time + reply_time / 60) / 2
             else:
-                user.average_reply_time = reply_time.total_seconds() / 60
+                user.average_reply_time = reply_time / 60
+        print(reply_time)
         session.commit()
 
 

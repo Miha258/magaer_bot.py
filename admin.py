@@ -34,7 +34,8 @@ async def handle_user_option(message: types.Message, state: FSMContext):
             [
              [types.KeyboardButton('За месец')],
              [types.KeyboardButton('За недалю')]
-            ]
+            ], 
+            resize_keyboard = True
         ))
         await state.set_state(Users.CHOOSE_STATS_TYPE)
     elif option == 'Создать команду':
@@ -63,23 +64,25 @@ async def set_user(message: types.Message, state: FSMContext):
 
 async def procces_action_with_user(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['username'] = message.text
-        action = data['action']
-        if action == 'Обновить баллы менеджера':
-            await state.set_state(Users.SET_SCORE)
-            await message.answer('Введите сумму баллов:')
-        elif action == 'Установить время перерыва':
-            await state.set_state(Users.SET_BRAKETIME)
-            await message.answer('Введите дату (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
-        elif action == 'Установить рабочее время':
-            await state.set_state(Users.SET_WORKDAY)
-            await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
-        elif action == 'Обновить роль':
-            await state.set_state(Users.SET_ROLE)
-            await message.answer('Введите @username:')
-        elif action == 'Удалить менеджера':
-            await remove_manager(message, state, message.text)
-
+        if session.query(User).filter_by(name = message.text).first():
+            data['username'] = message.text
+            action = data['action']
+            if action == 'Обновить баллы менеджера':
+                await state.set_state(Users.SET_SCORE)
+                await message.answer('Введите сумму баллов:')
+            elif action == 'Установить время перерыва':
+                await state.set_state(Users.SET_BRAKETIME)
+                await message.answer('Введите дату (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
+            elif action == 'Установить рабочее время':
+                await state.set_state(Users.SET_WORKDAY)
+                await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
+            elif action == 'Обновить роль':
+                await state.set_state(Users.SET_ROLE)
+                await message.answer('Введите @username:')
+            elif action == 'Удалить менеджера':
+                await remove_manager(message, state, message.text)
+        else:
+            await message.answer('Пользователь не зарегистрирован в боте')
 
 async def create_team(message: types.Message, state: FSMContext):
     team_name = message.text
