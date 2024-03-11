@@ -30,6 +30,7 @@ async def check_manager_delay(message: types.Message):
         user_id = message.from_user.id
         user = session.query(User).filter_by(id = user_id).first()
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
+        print(user, chat)
         if not user and chat:
             if message.text:
                 if message.text.endswith('?'):
