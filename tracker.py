@@ -37,25 +37,28 @@ async def check_manager_delay(message: types.Message):
                 print(message.text.endswith('?'))
                 if message.text.endswith('?'):
                     print('waiting')
-                    await asyncio.sleep(18)
+                    await asyncio.sleep(1800)
                     if last_messages.get(message.chat.id).message_id == message.message_id:
-                        manager = session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').first()
-                        await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
-                        if manager.paused < datetime.now():
-                            await remove_score(manager.id, 1)
-                        await asyncio.sleep(36)
-                        if last_messages.get(message.chat.id).message_id == message.message_id:
-                            team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
-                            await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
+                        try:
+                            manager = [await message.chat.get_member(m.id) for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all()][0]
+                            await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                             if manager.paused < datetime.now():
                                 await remove_score(manager.id, 1)
-                            await asyncio.sleep(36)
+                            await asyncio.sleep(3600)
                             if last_messages.get(message.chat.id).message_id == message.message_id:
+                                team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
+                                await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                                 if manager.paused < datetime.now():
-                                    await remove_score(manager.id, 5)
-                                if team_lead.paused < datetime.now():
-                                    await remove_score(team_lead.id, 3)
-                                await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+                                    await remove_score(manager.id, 1)
+                                await asyncio.sleep(3600)
+                                if last_messages.get(message.chat.id).message_id == message.message_id:
+                                    if manager.paused < datetime.now():
+                                        await remove_score(manager.id, 5)
+                                    if team_lead.paused < datetime.now():
+                                        await remove_score(team_lead.id, 3)
+                                    await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+                        except:
+                            pass
             elif user and chat:
                 if not message.text.endswith('?'):
                     print(last_message.message_id, message.message_id)
