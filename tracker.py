@@ -32,7 +32,9 @@ async def check_manager_delay(message: types.Message):
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
         print(user, chat)
         if not user and chat:
+            print(message.text)
             if message.text:
+                print(message.text.endswith('?'))
                 if message.text.endswith('?'):
                     print('waiting')
                     await asyncio.sleep(1800)
