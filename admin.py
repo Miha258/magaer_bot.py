@@ -78,7 +78,11 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
                 await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
             elif action == 'Обновить роль':
                 await state.set_state(Users.SET_ROLE)
-                await message.answer(f"Введите роль менеджера {roles}:")
+                await message.answer(f"Введите роль менеджера", reply_markup = types.ReplyKeyboardMarkup(keyboard = [
+                    [types.KeyboardButton('Тимлид')],
+                    [types.KeyboardButton('Афф-менеджер')],
+                    [types.KeyboardButton('Кволити-менеджер')]
+                ], resize_keyboard = True))
             elif action == 'Удалить менеджера':
                 await remove_manager(message, state, message.text)
         else:
@@ -190,7 +194,7 @@ async def set_role(message: types.Message, state: FSMContext):
             user.role = new_role
             session.commit()
             await state.finish()
-            await message.answer('Роль успешно обновлена')
+            await message.answer('Роль успешно обновлена', reply_markup = get_admin_kb())
         else:
             await message.answer('Пользователь не найден')
     else:
@@ -427,7 +431,7 @@ async def remove_team_command(message: types.Message):
                 await bot.leave_chat(chat.chat_id)
             except:
                 pass
-
+            
             session.delete(chat)
             session.delete(team)
             session.commit()
