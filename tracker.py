@@ -59,12 +59,11 @@ async def check_manager_delay(message: types.Message):
                                     await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
                         except Exception as e:
                             print(f'Error: {e}')
-            elif user and chat:
-                if not message.text.endswith('?'):
-                    print(last_message.message_id, message.message_id)
-                    if not session.query(User).filter_by(id = last_message.from_id).first():
-                        print('calculated')
-                        calculate_average_reply_time(last_message, message)
+        elif user and chat:
+            print(last_message.message_id, message.message_id)
+            if not session.query(User).filter_by(id = last_message.from_id).first():
+                print('calculated')
+                calculate_average_reply_time(last_message, message)
 
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
