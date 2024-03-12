@@ -78,7 +78,7 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
                 await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
             elif action == 'Обновить роль':
                 await state.set_state(Users.SET_ROLE)
-                await message.answer('Введите @username:')
+                await message.answer(f"Введите роль менеджера {roles}:")
             elif action == 'Удалить менеджера':
                 await remove_manager(message, state, message.text)
         else:
@@ -182,7 +182,7 @@ async def set_role(message: types.Message, state: FSMContext):
     new_role = message.text
     
     if new_role not in roles:
-        await message.answer(f'Роль должна быть из списка ({roles})')
+        await message.answer(f'Роль должна быть из списка {roles}')
     
     user = session.query(User).filter_by(name = data['username']).first()
     if user:
