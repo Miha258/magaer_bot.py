@@ -80,15 +80,15 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
         end_work_time = user.end_work_at
         if start_work_time <= message.date.time() <= end_work_time:
             if user.average_reply_worktime:
-                user.average_reply_worktime = (user.average_reply_worktime + reply_time / 60) / 2
+                user.average_reply_worktime = user.average_reply_worktime + reply_time / 2
             else:
-                user.average_reply_worktime = reply_time / 60
+                user.average_reply_worktime = reply_time
         else:
             if user.average_reply_time:
-                user.average_reply_time = (user.average_reply_time + reply_time / 60) / 2
+                user.average_reply_time = (user.average_reply_time + reply_time) / 2
             else:
-                user.average_reply_time = reply_time / 60
-        print(reply_time)
+                user.average_reply_time = reply_time
+                print(2)
         session.commit()
 
 

@@ -431,7 +431,6 @@ async def remove_team_command(message: types.Message):
                 await bot.leave_chat(chat.chat_id)
             except:
                 pass
-            
             session.delete(chat)
             session.delete(team)
             session.commit()
