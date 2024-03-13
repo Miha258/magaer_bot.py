@@ -36,7 +36,7 @@ async def check_manager_delay(message: types.Message):
                 print(message.text.endswith('?'))
                 if message.text.endswith('?'):
                     print('waiting')
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(1800)
                     if last_messages.get(message.chat.id).message_id == message.message_id:
                         manager = None
                         for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all():
@@ -48,7 +48,7 @@ async def check_manager_delay(message: types.Message):
                             if manager.paused < datetime.now() and manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time():
                                 await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                                 await remove_score(manager.id, 1)
-                        await asyncio.sleep(10)
+                        await asyncio.sleep(3600)
                         if last_messages.get(message.chat.id).message_id == message.message_id:
                             team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
                             if manager:
@@ -61,7 +61,7 @@ async def check_manager_delay(message: types.Message):
                                 if team_lead.paused < datetime.now():
                                     if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
                                         await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
-                            await asyncio.sleep(36)
+                            await asyncio.sleep(3600)
                             if last_messages.get(message.chat.id).message_id == message.message_id:
                                 if manager:
                                     if manager.paused < datetime.now():
