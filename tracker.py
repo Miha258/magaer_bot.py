@@ -30,35 +30,55 @@ async def check_manager_delay(message: types.Message):
         user_id = message.from_user.id
         user = session.query(User).filter_by(id = user_id).first()
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
-        print(user, chat)
         if not user and chat:
             print(message.text)
             if message.text:
                 print(message.text.endswith('?'))
                 if message.text.endswith('?'):
                     print('waiting')
-                    await asyncio.sleep(1800)
+                    await asyncio.sleep(10)
                     if last_messages.get(message.chat.id).message_id == message.message_id:
-                        try:
-                            manager = [m for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all() if await message.chat.get_member(m.id)][0]
-                            await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
-                            if manager.paused < datetime.now():
+                        manager = None
+                        for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all():
+                            user = await bot.get_chat_member(message.chat.id, m.id)
+                            if user:
+                                if user.status != "kicked" and user.status != "left" and user.status != "banned":
+                                    manager = m
+                        if manager:
+                            if manager.paused < datetime.now() and manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time():
+                                await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                                 await remove_score(manager.id, 1)
-                            await asyncio.sleep(3600)
+                        await asyncio.sleep(10)
+                        if last_messages.get(message.chat.id).message_id == message.message_id:
+                            team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
+                            if manager:
+                                if manager.paused < datetime.now() or team_lead.paused < datetime.now():
+                                    if manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time() \
+                                        and team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                        await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
+                                        await remove_score(manager.id, 1)
+                            else:
+                                if team_lead.paused < datetime.now():
+                                    if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                        await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
+                            await asyncio.sleep(36)
                             if last_messages.get(message.chat.id).message_id == message.message_id:
-                                team_lead = session.query(User).filter_by(team_id = manager.team_id, role = 'Тимлид').first()
-                                await last_message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
-                                if manager.paused < datetime.now():
-                                    await remove_score(manager.id, 1)
-                                await asyncio.sleep(3600)
-                                if last_messages.get(message.chat.id).message_id == message.message_id:
+                                if manager:
                                     if manager.paused < datetime.now():
                                         await remove_score(manager.id, 5)
+                                if team_lead.paused < datetime.now():
+                                    await remove_score(team_lead.id, 3)
+
+                                if manager:
+                                    if team_lead.paused < datetime.now() and manager.paused < datetime.now():
+                                        if manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time() \
+                                            and team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                            await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+                                else:
                                     if team_lead.paused < datetime.now():
-                                        await remove_score(team_lead.id, 3)
-                                    await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
-                        except Exception as e:
-                            print(f'Error: {e}')
+                                        if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                            await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
+                       
         elif user and chat:
             print(last_message.message_id, message.message_id)
             if not session.query(User).filter_by(id = last_message.from_id).first():

@@ -34,7 +34,7 @@ async def start(message: types.Message, state: FSMContext):
 /stats - просмотр статистики отдела
 Пример использования: /stats
 
-/monthly_stats -  просмотр статистики отдела (за месец)
+/monthly_stats -  просмотр статистики отдела (за месяц)
 Пример использования: /monthly_stats
 
 /weekly_stats -  просмотр статистики отдела (за неделю)
@@ -75,7 +75,7 @@ async def start(message: types.Message, state: FSMContext):
 /team_stats - показать статистику команды.
 Например: /team_stats
                                      
-/team_stats_monthly -  просмотр статистики команды (за месец)
+/team_stats_monthly -  просмотр статистики команды (за месяц)
 Пример использования: /team_stats_monthly
 
 /team_stats_weeekly -  просмотр статистики команды (за неделю)
@@ -92,7 +92,7 @@ async def start(message: types.Message, state: FSMContext):
 /stats - просмотр статистики отдела.
 Например: /stats
                                      
-/monthly_stats -  просмотр статистики отдела (за месец)
+/monthly_stats -  просмотр статистики отдела (за месяц)
 Пример использования: /monthly_stats
 
 /weekly_stats -  просмотр статистики отдела (за неделю)

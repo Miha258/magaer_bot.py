@@ -32,7 +32,7 @@ async def handle_user_option(message: types.Message, state: FSMContext):
     if option == 'Статистика':
         await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
             [
-             [types.KeyboardButton('За месец')],
+             [types.KeyboardButton('За месяц')],
              [types.KeyboardButton('За неделю')]
             ], 
             resize_keyboard = True
