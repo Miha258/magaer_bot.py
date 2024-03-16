@@ -30,9 +30,8 @@ async def check_manager_delay(message: types.Message):
         user_id = message.from_user.id
         user = session.query(User).filter_by(id = user_id).first()
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
-        if not user and chat:
-            print(message.text)
-            if message.text:
+        if message.text:
+            if not user and chat:
                 print(message.text.endswith('?'))
                 if message.text.endswith('?'):
                     print('waiting')
@@ -78,12 +77,12 @@ async def check_manager_delay(message: types.Message):
                                     if team_lead.paused < datetime.now():
                                         if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
                                             await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
-                       
-        elif user and chat:
-            print(last_message.message_id, message.message_id)
-            if not session.query(User).filter_by(id = last_message.from_id).first():
-                print('calculated')
-                calculate_average_reply_time(last_message, message)
+                        
+            elif user and chat:
+                print(last_message.message_id, message.message_id)
+                if not session.query(User).filter_by(id = last_message.from_id).first() and message.text.endswith('?'):
+                    print('calculated')
+                    calculate_average_reply_time(last_message, message)
 
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
@@ -100,7 +99,7 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
         end_work_time = user.end_work_at
         if start_work_time <= message.date.time() <= end_work_time:
             if user.average_reply_worktime:
-                user.average_reply_worktime = user.average_reply_worktime + reply_time / 2
+                user.average_reply_worktime = (user.average_reply_worktime + reply_time) / 2
             else:
                 user.average_reply_worktime = reply_time
         else:
