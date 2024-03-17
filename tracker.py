@@ -79,7 +79,7 @@ async def check_manager_delay(message: types.Message):
                                             await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
                         
             elif user and chat:
-                if not session.query(User).filter_by(id = last_message.from_id).first() and last_messages.get(message.chat.id).text.endswith('?'):
+                if not session.query(User).filter_by(id = last_message.from_id).first() and last_message.text.endswith('?'):
                     print('calculated')
                     calculate_average_reply_time(last_message, message)
 
