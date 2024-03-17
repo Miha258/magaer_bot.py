@@ -19,7 +19,8 @@ async def send_message_with_delay(chat_id: int, message: str):
         print(f"Error sending message to chat {chat_id}: {e}")
 
 async def check_manager_delay(message: types.Message):
-    # if datetime.today().weekday() >= 5:
+    week_day = datetime.today().weekday()
+    if week_day != 5 and week_day != 6:
         last_message: types.Message = last_messages.get(message.chat.id)
         if not last_message:
             last_messages[message.chat.id] = message
