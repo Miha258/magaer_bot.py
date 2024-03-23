@@ -86,6 +86,7 @@ async def check_manager_delay(message: types.Message):
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
     if user:
+        WeeklyStats.update(user_id, quality_score = user.quality_score - score)
         user.quality_score -= score
         session.commit()
 
@@ -99,14 +100,17 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
         if start_work_time <= message.date.time() <= end_work_time:
             if user.average_reply_worktime:
                 user.average_reply_worktime = (user.average_reply_worktime + reply_time) / 2
+                WeeklyStats.update(user_id, average_reply_worktime = reply_time)
             else:
                 user.average_reply_worktime = reply_time
+                WeeklyStats.update(user_id, average_reply_worktime = reply_time)
         else:
             if user.average_reply_time:
                 user.average_reply_time = (user.average_reply_time + reply_time) / 2
+                WeeklyStats.update(user_id, average_reply_time = (user.average_reply_time + reply_time) / 2)
             else:
                 user.average_reply_time = reply_time
-                print(2)
+                WeeklyStats.update(user_id, average_reply_time = reply_time)
         session.commit()
 
 

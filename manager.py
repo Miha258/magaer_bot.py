@@ -2,7 +2,6 @@ from aiogram import types
 from config import *
 from utils import *
 from db import session, User
-from datetime import time
 
 async def show_personal_statistics(message: types.Message):
     user_id = message.from_user.id

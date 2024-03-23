@@ -1,7 +1,7 @@
 from aiogram import types
 from config import *
 from utils import *
-from db import session, User, Team, Chat
+from db import session, User, Team, Chat, WeeklyStats
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards import get_teamlead_kb
@@ -17,6 +17,23 @@ async def show_team_statistics(message: types.Message):
     team = session.query(Team).filter_by(name=team_name).first()
     if team:
         members = session.query(User).filter_by(team_id=team.name).all()
+        response = f"Статистика команды {team_name}:\n"
+        for member in members:
+            avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
+            avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
+            braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
+            response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в не рабочее время:</strong> {avrg_time} {braketime}\n\n"
+        await message.answer(response, parse_mode='html', reply_markup = get_teamlead_kb())
+    else:
+        await message.answer("Команда с таким именем не найдена.")
+
+
+async def show_team_statistics_weekly(message: types.Message):
+    team_name = session.query(User).filter_by(id = message.from_id).first().team_id
+    team = session.query(Team).filter_by(name=team_name).first()
+    if team:
+        members = session.query(WeeklyStats).all()
+        members = list(filter(lambda member: member.team_id == team_name, members))
         response = f"Статистика команды {team_name}:\n"
         for member in members:
             avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
@@ -165,7 +182,7 @@ def register_teamlead(dp: Dispatcher):
     dp.register_message_handler(choose_statistic, state = Teams.CHOOSE_STATS_TYPE)
     dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats'])
     dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats_monthly'])
-    dp.register_message_handler(show_team_statistics, IsTeamlead(), commands = ['team_stats_weeekly'])
+    dp.register_message_handler(show_team_statistics_weekly, IsTeamlead(), commands = ['team_stats_weeekly'])
     dp.register_message_handler(add_member_to_team_command, IsTeamlead(), commands=['add_member_to_team'])
     dp.register_message_handler(remove_member_from_team_command, IsTeamlead(), commands=['remove_member_from_team'])
     dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды', 'Статистика команды'))

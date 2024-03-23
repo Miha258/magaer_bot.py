@@ -1,7 +1,7 @@
 from aiogram import types
 from config import *
 from utils import *
-from db import session, User, Chat, Team
+from db import session, User, Chat, Team, WeeklyStats
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from keyboards import *
@@ -253,6 +253,17 @@ async def show_department_statistics(message: types.Message):
     await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
 
+async def show_department_statistics_weekly(message: types.Message):
+    response = "Статистика отдела за неделю:\n"
+    members = session.query(WeeklyStats).order_by(WeeklyStats.quality_score).all()
+    for member in members:
+        avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
+        avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
+        braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
+        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в не рабочее время:</strong> {avrg_time} {braketime}\n\n"
+    await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
+
+
 async def send_message_to_department_command(message: types.Message):
     try:
         chats = session.query(Chat).all()
@@ -461,7 +472,7 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(remove_manager_command, IsAdmin(), commands = ['remove_manager'])
     dp.register_message_handler(update_manager_score_command, IsAdmin(), commands = ['update_manager_score'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['stats'])
-    dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['weekly_stats'])
+    dp.register_message_handler(show_department_statistics_weekly, IsAdmin(), commands = ['weekly_stats'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['monthly_stats'])
 
     dp.register_message_handler(set_braketime_command, IsAdmin(), commands = ['set_braketime'])
