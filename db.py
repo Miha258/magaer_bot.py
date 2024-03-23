@@ -82,4 +82,3 @@ Session = sessionmaker(engine)
 session = Session()
 create_tables()
 session.commit()
-
