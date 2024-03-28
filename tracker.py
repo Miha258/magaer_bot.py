@@ -3,7 +3,7 @@ from datetime import datetime
 from aiogram import types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import *
-from db import User, Chat, session, WeeklyStats, MonthlyStats
+from db import User, Chat, session, WeeklyStats
 
 class CheckManagerDelay(StatesGroup):
     AWAITING_REPLY = State()
@@ -80,7 +80,7 @@ async def check_manager_delay(message: types.Message):
                                             await last_message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
                         
             elif user and chat:
-                if not session.query(User).exists(id = last_message.from_id) and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
+                if not session.query(User).filter_by(id = last_message.from_id).exists() and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
                     print('calculated')
                     print(f'MANAGER REPLY IN: {message.chat.full_name}')
                     calculate_average_reply_time(last_message, message)
