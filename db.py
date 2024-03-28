@@ -65,6 +65,33 @@ class WeeklyStats(Base):
             session.add(weekly_stats)
         session.commit()
 
+class DailyStats(Base):
+    __tablename__ = 'daily_stats'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    quality_score = Column(Integer, default=100)
+    average_reply_time = Column(Integer, default=0)
+    average_reply_worktime = Column(Integer, default=0)
+    date = Column(DateTime, default=datetime.now())
+
+    @classmethod
+    def update(cls, user_id, quality_score=None, average_reply_time=None, average_reply_worktime=None):
+        current_time = datetime.now()
+        daily_stats = session.query(cls).filter_by(user_id=user_id, date=current_time.date()).first()
+
+        if daily_stats:
+            if quality_score:
+                daily_stats.quality_score += quality_score
+            if average_reply_time:
+                daily_stats.average_reply_time += average_reply_time
+            if average_reply_worktime:
+                daily_stats.average_reply_worktime += average_reply_worktime
+        else:
+            daily_stats = cls(user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            session.add(daily_stats)
+
+        session.commit()
+
 class MonthlyStats(Base):
     __tablename__ = 'monthly_stats'
     id = Column(Integer, primary_key=True)

@@ -34,6 +34,7 @@ async def check_manager_delay(message: types.Message):
         if message.text:
             if not user and chat:
                 if '?' in last_message.text:
+                    print(f'USER DETECTED IN: {message.chat.full_name}')
                     print('waiting')
                     await asyncio.sleep(1800)
                     if last_messages.get(message.chat.id).message_id == message.message_id:
@@ -47,6 +48,7 @@ async def check_manager_delay(message: types.Message):
                             if manager.paused < datetime.now() and manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time():
                                 await last_message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                                 await remove_score(manager.id, 1)
+                                WeeklyStats.update(user_id, average_reply_time = (user.average_reply_time + datetime.timed) / 2)
                         await asyncio.sleep(3600)
                         if last_messages.get(message.chat.id).message_id == message.message_id:
                             team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
@@ -81,6 +83,7 @@ async def check_manager_delay(message: types.Message):
             elif user and chat:
                 if not session.query(User).filter_by(id = last_message.from_id).first() and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
                     print('calculated')
+                    print(f'MANAGER REPLY IN: {message.chat.full_name}')
                     calculate_average_reply_time(last_message, message)
 
 async def remove_score(user_id: int, score: int):
