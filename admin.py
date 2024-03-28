@@ -72,7 +72,7 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
                 await message.answer('Введите сумму баллов:')
             elif action == 'Установить время перерыва':
                 await state.set_state(Users.SET_BRAKETIME)
-                await message.answer('Введите дату (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
+                await message.answer('Введите время (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
             elif action == 'Установить рабочее время':
                 await state.set_state(Users.SET_WORKDAY)
                 await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
@@ -260,7 +260,7 @@ async def show_department_statistics_weekly(message: types.Message):
         avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
         avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
         braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
-        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в не рабочее время:</strong> {avrg_time} {braketime}\n\n"
+        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в нерабочее время:</strong> {avrg_time} {braketime}\n\n"
     await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
 

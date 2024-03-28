@@ -11,7 +11,6 @@ class CheckManagerDelay(StatesGroup):
 timeouts = {}
 last_messages = {}
 
-
 async def send_message_with_delay(chat_id: int, message: str):
     try:
         await bot.send_message(chat_id, message)
