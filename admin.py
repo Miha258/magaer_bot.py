@@ -46,7 +46,7 @@ async def handle_user_option(message: types.Message, state: FSMContext):
         await message.answer('Введите название команды:')
     elif option == 'Отправить сообщение в чаты':
         await state.set_state(Users.CHAT_MESSAGE)
-        await message.answer('Введите сообщения для отправки:')
+        await message.answer('Введите сообщение для отправки:')
     elif option == 'Создать менеджера':
         await create_manager(message, state)
 
@@ -211,7 +211,7 @@ async def send_message_to_department(message: types.Message, state: FSMContext):
             await bot.send_message(chat.chat_id, message_text)
             counter += 1
         except Exception as e:
-            await message.answer(f"Ошибка при отправке сообщения в чат {chat.chat_id}: {e}")
+            await message.answer(f"Ошибка при отправке сообщение в чат {chat.chat_id}: {e}")
     await message.answer(f'Количество отправленных сообщений: <strong>{counter}</strong>', parse_mode = "html")
    
 
@@ -249,7 +249,7 @@ async def show_department_statistics(message: types.Message):
         avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
         avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
         braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
-        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в не рабочее время:</strong> {avrg_time} {braketime}\n\n"
+        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в нерабочее время:</strong> {avrg_time} {braketime}\n\n"
     await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
 
@@ -275,7 +275,7 @@ async def send_message_to_department_command(message: types.Message):
                 await bot.send_message(chat.chat_id, message_text)
                 counter += 1
             except Exception as e:
-                print(f"Ошибка при отправке сообщения в чат {chat.chat_id}: {e}")
+                print(f"Ошибка при отправке сообщение в чат {chat.chat_id}: {e}")
         await message.answer(f'Количество отправленных сообщений: <strong>{counter}</strong>', parse_mode = "html")
     except IndexError:
             await message.answer('Неправильное количество аргументов')
@@ -361,19 +361,19 @@ async def recive_manager_data(message: types.Message, state: FSMContext):
         await message.answer('Выберите команду для тимлида:', reply_markup = kb)
         await state.set_state(CreateUser.TEAM)
     else:
-        await message.answer('Перешлите сообщения из чата:')
+        await message.answer('Перешлите сообщение из чата:')
         await state.set_state(CreateUser.MESSAGE)
 
 
 async def set_manager_team(message: types.Message, state: FSMContext):
     await state.update_data({'team': message.text})
-    await message.answer('Перешлите сообщения из чата:')
+    await message.answer('Перешлите сообщение из чата:')
     await state.set_state(CreateUser.MESSAGE)
 
 
 async def procces_create_manager(message: types.Message, state: FSMContext):
     if not message.forward_from:
-        await message.answer('Попробуйте другое сообщения') 
+        await message.answer('Попробуйте другое сообщение') 
     else:
         data = await state.get_data()
         chat_member = message.forward_from

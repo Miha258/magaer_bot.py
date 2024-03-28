@@ -60,7 +60,7 @@ async def start(message: types.Message, state: FSMContext):
 Параметры: /remove_team <имя_команды> (Тимлид, Афф-менеджер, Кволити-менеджер)
 Пример использования: /remove_team Команда1
 
-/send_message_to_chats - переслать сообщения по всем чатам
+/send_message_to_chats - переслать сообщение по всем чатам
 Параметры: /send_message_to_chats <текст>
 Пример использования: /send_message_to_chats всем привет
         """
