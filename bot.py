@@ -117,8 +117,8 @@ async def start(message: types.Message, state: FSMContext):
 if __name__ == '__main__':
     register_admin(dp)
     register_teamlead(dp)
-    register_tracker(dp)
     register_aff_manager(dp)
     register_quality_manager(dp)
+    register_tracker(dp)
     create_tables()
     executor.start_polling(dp, skip_updates = True)

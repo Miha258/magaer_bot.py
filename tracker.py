@@ -125,4 +125,4 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
 
 
 def register_tracker(dp: Dispatcher):
-    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup'), content_types = types.ContentTypes.TEXT | types.ContentTypes.PHOTO | types.ContentTypes.VIDEO, state="*")
+    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup'), content_types = types.ContentTypes.ANY, state="*")
