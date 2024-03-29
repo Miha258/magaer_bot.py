@@ -21,6 +21,7 @@ chats = []
 async def check_manager_delay(message: types.Message):
     if message.chat.full_name not in chats:
         chats.append(message.chat.full_name)
+    print(chats)
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_user.id
@@ -43,7 +44,6 @@ async def check_manager_delay(message: types.Message):
                             if user:
                                 if user.status != "kicked" and user.status != "left" and user.status != "banned":
                                     manager = m
-                        print(manager)
                         if manager:
                             if manager.paused < datetime.now() and manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time():
                                 await message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
