@@ -72,7 +72,7 @@ class DailyStats(Base):
     quality_score = Column(Integer, default=100)
     average_reply_time = Column(Integer, default=0)
     average_reply_worktime = Column(Integer, default=0)
-    date = Column(DateTime, default=datetime.now())
+    date = Column(DateTime)
 
     @classmethod
     def update(cls, user_id, quality_score=None, average_reply_time=None, average_reply_worktime=None):
@@ -87,7 +87,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime += average_reply_worktime
         else:
-            daily_stats = cls(user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            daily_stats = cls(date = datetime.now(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
             session.add(daily_stats)
 
         session.commit()

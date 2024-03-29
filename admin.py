@@ -1,10 +1,11 @@
 from aiogram import types
 from config import *
 from utils import *
-from db import session, User, Chat, Team, WeeklyStats
+from db import session, User, Chat, Team, WeeklyStats, DailyStats
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from keyboards import *
+from sqlalchemy import func
 
 
 class CreateUser(StatesGroup):
@@ -33,7 +34,8 @@ async def handle_user_option(message: types.Message, state: FSMContext):
         await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
             [
              [types.KeyboardButton('За месяц')],
-             [types.KeyboardButton('За неделю')]
+             [types.KeyboardButton('За неделю')],
+             [types.KeyboardButton('За день')]
             ], 
             resize_keyboard = True
         ))
@@ -51,7 +53,13 @@ async def handle_user_option(message: types.Message, state: FSMContext):
         await create_manager(message, state)
 
 async def choose_statistic(message: types.Message, state: FSMContext):
-    await show_department_statistics(message)
+    print(message.text)
+    if message.text == 'За месяц':
+        await show_department_statistics(message)
+    elif message.text == 'За неделю':
+        await show_department_statistics_weekly(message)
+    elif  message.text == 'За день':
+        await show_department_statistics_daily(message)
     await state.finish()
     
 
@@ -255,14 +263,35 @@ async def show_department_statistics(message: types.Message):
 
 async def show_department_statistics_weekly(message: types.Message):
     response = "Статистика отдела за неделю:\n"
-    members = session.query(WeeklyStats).order_by(WeeklyStats.quality_score).all()
+    now = datetime.now()
+    members = session.query(WeeklyStats).filter(
+        WeeklyStats.start_day < now,
+        WeeklyStats.end_day > now
+    ).order_by(WeeklyStats.quality_score).all()
     for member in members:
+        user = session.query(User).filter_by(id = member.user_id).first()
         avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
         avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
-        braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(member.paused, "%Y.%m.%d-%H:%M") if member.paused > datetime.now() else ""
-        response += f"{member.name}, <strong>Роль:</strong> {member.role}, <strong>ID:</strong> {member.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not member.team_id else member.team_id}, <strong>Рабочее время:</strong> {':'.join(str(member.start_work_at).split(':')[:-1])}-{':'.join(str(member.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в нерабочее время:</strong> {avrg_time} {braketime}\n\n"
+        if user:
+            braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(user.paused, "%Y.%m.%d-%H:%M") if user.paused > datetime.now() else ""
+            response += f"{user.name}, <strong>Роль:</strong> {user.role}, <strong>ID:</strong> {user.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not user.team_id else user.team_id}, <strong>Рабочее время:</strong> {':'.join(str(user.start_work_at).split(':')[:-1])}-{':'.join(str(user.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в нерабочее время:</strong> {avrg_time} {braketime}\n\n"
     await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
 
+
+async def show_department_statistics_daily(message: types.Message):
+    response = "Статистика отдела за день:\n"
+    members = session.query(DailyStats).filter(
+        func.date(DailyStats.date) == datetime.now().date()
+    ).order_by(DailyStats.quality_score).all()
+    for member in members:
+        user = session.query(User).filter_by(id = member.user_id).first()
+        avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
+        avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
+        if user:
+            braketime = ", <strong>Перерыв до: </strong>" + datetime.strftime(user.paused, "%Y.%m.%d-%H:%M") if user.paused > datetime.now() else ""
+            response += f"{user.name}, <strong>Роль:</strong> {user.role}, <strong>ID:</strong> {user.id}, <strong>Баллы</strong>: {member.quality_score}, <strong>Команда:</strong> {'нет' if not user.team_id else user.team_id}, <strong>Рабочее время:</strong> {':'.join(str(user.start_work_at).split(':')[:-1])}-{':'.join(str(user.end_work_at).split(':')[:-1])}, <strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime}, <strong>Среднее время ответа в нерабочее время:</strong> {avrg_time} {braketime}\n\n"
+    await message.answer(response, parse_mode = 'html', reply_markup = get_admin_kb())
+    
 
 async def send_message_to_department_command(message: types.Message):
     try:
@@ -474,6 +503,7 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['stats'])
     dp.register_message_handler(show_department_statistics_weekly, IsAdmin(), commands = ['weekly_stats'])
     dp.register_message_handler(show_department_statistics, IsAdmin(), commands = ['monthly_stats'])
+    dp.register_message_handler(show_department_statistics_daily, IsAdmin(), commands = ['daily_stats'])
 
     dp.register_message_handler(set_braketime_command, IsAdmin(), commands = ['set_braketime'])
     dp.register_message_handler(set_workday_range_command, IsAdmin(), commands = ['set_workday_range'])
