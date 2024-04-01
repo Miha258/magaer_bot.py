@@ -24,7 +24,7 @@ async def check_manager_delay(message: types.Message):
     print(chats)
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
-        user_id = message.from_user.id
+        user_id = message.from_id
         user = session.query(User).filter_by(id = user_id).first()
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
         if message.text:
