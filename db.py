@@ -79,7 +79,7 @@ class DailyStats(Base):
         current_time = datetime.today().date()
         daily_stats = None
         for stats in session.query(cls).filter_by(user_id = user_id).all():
-            if stats.date == current_time:
+            if stats.date.date() == current_time:
                 daily_stats = stats
                 break
 
@@ -91,7 +91,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime += average_reply_worktime
         else:
-            daily_stats = cls(date = current_time, user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            daily_stats = cls(date = datetime.today(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
             session.add(daily_stats)
 
         session.commit()
