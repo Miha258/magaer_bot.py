@@ -281,7 +281,7 @@ async def show_department_statistics_weekly(message: types.Message):
 async def show_department_statistics_daily(message: types.Message):
     response = "Статистика отдела за день:\n"
     members = session.query(DailyStats).filter(
-        func.date(DailyStats.date) == datetime.now().date()
+        func.date(DailyStats.date) == datetime.today().date()
     ).order_by(DailyStats.quality_score).all()
     for member in members:
         user = session.query(User).filter_by(id = member.user_id).first()

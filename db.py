@@ -76,8 +76,12 @@ class DailyStats(Base):
 
     @classmethod
     def update(cls, user_id, quality_score=None, average_reply_time=None, average_reply_worktime=None):
-        current_time = datetime.now()
-        daily_stats = session.query(cls).filter_by(user_id=user_id, date=current_time.date()).first()
+        current_time = datetime.today().date()
+        daily_stats = None
+        for stats in session.query(cls).filter_by(user_id = user_id).all():
+            if stats.date == current_time:
+                daily_stats = stats
+                break
 
         if daily_stats:
             if quality_score:
@@ -87,7 +91,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime += average_reply_worktime
         else:
-            daily_stats = cls(date = datetime.today().date(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            daily_stats = cls(date = current_time, user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
             session.add(daily_stats)
 
         session.commit()

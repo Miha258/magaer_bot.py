@@ -57,7 +57,7 @@ async def show_team_statistics_daily(message: types.Message):
     team = session.query(Team).filter_by(name=team_name).first()
     if team:
         members = session.query(DailyStats).filter(
-            func.date(DailyStats.date) == datetime.now().date()
+            func.date(DailyStats.date) == datetime.today().date()
         ).order_by(DailyStats.quality_score).all()
         response = f"Статистика команды {team_name} за день:\n"
         for member in members:
