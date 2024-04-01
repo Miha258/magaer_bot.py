@@ -53,11 +53,11 @@ class WeeklyStats(Base):
         
         if weekly_stats:
             if quality_score:
-                weekly_stats.quality_score = weekly_stats.quality_score + quality_score
+                weekly_stats.quality_score += quality_score
             if average_reply_time:
-                weekly_stats.average_reply_time = weekly_stats.average_reply_time + average_reply_time
+                weekly_stats.average_reply_time += average_reply_time
             if average_reply_worktime:
-                weekly_stats.average_reply_worktime = weekly_stats.average_reply_worktime + average_reply_worktime
+                weekly_stats.average_reply_worktime += average_reply_worktime
         else:
             start_of_week = current_time - timedelta(days = current_time.weekday())
             end_of_week = start_of_week + timedelta(days=6)
@@ -93,7 +93,6 @@ class DailyStats(Base):
         else:
             daily_stats = cls(date = datetime.today(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
             session.add(daily_stats)
-
         session.commit()
 
 class MonthlyStats(Base):

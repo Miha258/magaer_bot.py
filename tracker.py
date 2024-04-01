@@ -96,8 +96,8 @@ async def check_manager_delay(message: types.Message):
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
     if user:
-        WeeklyStats.update(user_id, quality_score = user.quality_score - score)
-        DailyStats.update(user_id, quality_score = user.quality_score - score)
+        WeeklyStats.update(user_id, quality_score = score)
+        DailyStats.update(user_id, quality_score = score)
         user.quality_score -= score
         session.commit()
 
