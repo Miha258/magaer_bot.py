@@ -1,3 +1,4 @@
+from operator import and_
 from aiogram import types
 from config import *
 from utils import *
@@ -280,10 +281,12 @@ async def show_department_statistics_weekly(message: types.Message):
 
 async def show_department_statistics_daily(message: types.Message):
     response = "Статистика отдела за день:\n"
-    members = session.query(DailyStats).filter(
-        func.date(DailyStats.date) == datetime.today().date()
-    ).order_by(DailyStats.quality_score).all()
-    for member in members:
+    latest_dates_subquery = session.query(func.max(DailyStats.date).label("max_date")).\
+    group_by(DailyStats.user_id).subquery()
+    latest_stats = session.query(DailyStats).\
+        join(latest_dates_subquery, and_(DailyStats.date == latest_dates_subquery.c.max_date,
+                                        DailyStats.user_id == latest_dates_subquery.c.user_id)).all()
+    for member in latest_stats:
         user = session.query(User).filter_by(id = member.user_id).first()
         avrg_worktime = f"{int((member.average_reply_worktime / 60) // 60)} час. {int((member.average_reply_worktime / 60) % 60)} мин." if member.average_reply_worktime else "0 час. 0 мин." 
         avrg_time = f"{int((member.average_reply_time / 60) // 60)} час. {int((member.average_reply_time / 60) % 60)} мин." if member.average_reply_time else "0 час. 0 мин."
