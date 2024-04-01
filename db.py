@@ -87,7 +87,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime += average_reply_worktime
         else:
-            daily_stats = cls(date = datetime.now(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            daily_stats = cls(date = datetime.today().date(), user_id=user_id, quality_score=quality_score, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
             session.add(daily_stats)
 
         session.commit()

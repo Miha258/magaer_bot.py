@@ -53,7 +53,7 @@ class IsTeamlead(BoundFilter):
     
 class IsAdmin(BoundFilter):
     key = 'is_admin'
-
+    
     async def check(self, message: types.Message) -> bool:
         user_id = message.from_user.username
         return user_id in admins

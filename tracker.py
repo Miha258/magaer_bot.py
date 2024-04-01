@@ -29,12 +29,12 @@ async def check_manager_delay(message: types.Message):
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
         if message.text:
             last_message: types.Message = last_messages.get(message.chat.id)
+            if not last_message:
+                last_messages[message.chat.id] = message
+                last_message = message
+            elif last_message.message_id != message.message_id:
+                last_messages[message.chat.id] = message
             if not user and chat:
-                if not last_message:
-                    last_messages[message.chat.id] = message
-                    last_message = message
-                elif last_message.message_id != message.message_id:
-                    last_messages[message.chat.id] = message
                 if '?' in message.text:
                     await asyncio.sleep(1800)
                     if last_messages.get(message.chat.id).message_id == message.message_id:
@@ -125,4 +125,4 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
 
 
 def register_tracker(dp: Dispatcher):
-    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup'), content_types = types.ContentTypes.ANY, state="*")
+    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup', 'channel'), content_types = types.ContentTypes.ANY, state="*")
