@@ -47,44 +47,45 @@ async def check_manager_delay(message: types.Message):
                                     if user.status != "kicked" and user.status != "left" and user.status != "banned":
                                         manager = m
                             if manager:
-                                if manager.paused < datetime.now() and manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time():
+                                now = datetime.now()
+                                if manager.paused < now and manager.end_work_at > now.time() and manager.start_work_at < now.time():
                                     await message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                                     await remove_score(manager.id, 1)
-                                    WeeklyStats.update(user_id, average_reply_time = (user.average_reply_time + datetime.timed) / 2)
-                                    DailyStats.update(user_id, average_reply_time = (user.average_reply_time + datetime.timed) / 2)
                         await asyncio.sleep(3600)
                         user = session.query(User).filter_by(id = message.from_id).first()
                         if not user:
                             if last_messages.get(message.chat.id).message_id == message.message_id:
                                 team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
+                                now = datetime.now()
                                 if manager:
-                                    if manager.paused < datetime.now() or team_lead.paused < datetime.now():
-                                        if manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time() \
-                                            and team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                    if manager.paused < now or team_lead.paused < now:
+                                        if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
+                                            and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                             await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                                             await remove_score(manager.id, 1)
                                 else:
-                                    if team_lead.paused < datetime.now():
-                                        if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                    if team_lead.paused < now:
+                                        if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                             await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
                                 await asyncio.sleep(3600)
                                 user = session.query(User).filter_by(id = message.from_id).first()
                                 if not user:
                                     if last_messages.get(message.chat.id).message_id == message.message_id:
+                                        now = datetime.now()
                                         if manager:
-                                            if manager.paused < datetime.now():
+                                            if manager.paused < now:
                                                 await remove_score(manager.id, 5)
-                                        if team_lead.paused < datetime.now():
+                                        if team_lead.paused < now:
                                             await remove_score(team_lead.id, 3)
 
                                         if manager:
-                                            if team_lead.paused < datetime.now() and manager.paused < datetime.now():
-                                                if manager.end_work_at > datetime.now().time() and manager.start_work_at < datetime.now().time() \
-                                                    and team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                            if team_lead.paused < now and manager.paused < now:
+                                                if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
+                                                    and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                                     await message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
                                         else:
-                                            if team_lead.paused < datetime.now():
-                                                if team_lead.end_work_at > datetime.now().time() and team_lead.start_work_at < datetime.now().time():
+                                            if team_lead.paused < now:
+                                                if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                                     await message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
                                 
             elif user and chat:
@@ -96,8 +97,8 @@ async def check_manager_delay(message: types.Message):
 async def remove_score(user_id: int, score: int):
     user = session.query(User).filter_by(id=user_id).first()
     if user:
-        WeeklyStats.update(user_id, quality_score = -score)
-        DailyStats.update(user_id, quality_score = -score)
+        WeeklyStats.update(user_id, quality_score = score)
+        DailyStats.update(user_id, quality_score = score)
         user.quality_score -= score
         session.commit()
 
