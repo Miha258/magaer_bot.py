@@ -155,7 +155,7 @@ async def set_score(message: types.Message, state: FSMContext):
             if stats_type == 'За неделю':
                 WeeklyStats.update(user.id, quality_score = score_to_update)
 
-            if stats_type == 'За месец':
+            if stats_type == 'За месяц':
                 user.quality_score = user.quality_score + score_to_update
                 session.commit()
             await state.finish()
