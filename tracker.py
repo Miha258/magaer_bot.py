@@ -29,13 +29,13 @@ async def check_manager_delay(message: types.Message):
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
         if message.text:
             last_message: types.Message = last_messages.get(message.chat.id)
+            if not last_message:
+                last_messages[message.chat.id] = message
+                last_message = message
+            elif last_message.message_id != message.message_id:
+                last_messages[message.chat.id] = message
             if not user and chat:
                 if '?' in message.text:
-                    if not last_message:
-                        last_messages[message.chat.id] = message
-                        last_message = message
-                    elif last_message.message_id != message.message_id:
-                        last_messages[message.chat.id] = message
                     await asyncio.sleep(1800)
                     user = session.query(User).filter_by(id = message.from_id).first()
                     if not user:
@@ -116,7 +116,6 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
                 DailyStats.update(user_id, average_reply_worktime = reply_time)
             else:
                 user.average_reply_worktime = reply_time
-                print(reply_time)
                 WeeklyStats.update(user_id, average_reply_worktime = reply_time)
                 DailyStats.update(user_id, average_reply_worktime = reply_time)
         else:
