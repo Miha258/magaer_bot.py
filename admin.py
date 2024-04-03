@@ -25,6 +25,7 @@ class Users(StatesGroup):
     REMOVE_MANAGER = State()
     CHAT_MESSAGE = State()
     CHOOSE_STATS_TYPE = State()
+    CHOOSE_STATS_TYPE_TO_SET = State()
 
 
 async def handle_user_option(message: types.Message, state: FSMContext):
@@ -76,8 +77,15 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
             data['username'] = message.text
             action = data['action']
             if action == 'Обновить баллы менеджера':
-                await state.set_state(Users.SET_SCORE)
-                await message.answer('Введите сумму баллов:')
+                await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
+                [
+                    [types.KeyboardButton('За месяц')],
+                    [types.KeyboardButton('За неделю')],
+                    [types.KeyboardButton('За день')]
+                ], 
+                resize_keyboard = True
+                ))
+                await state.set_state(Users.CHOOSE_STATS_TYPE_TO_SET)
             elif action == 'Установить время перерыва':
                 await state.set_state(Users.SET_BRAKETIME)
                 await message.answer('Введите время (к которой менеджер будет в отпуске) в формате <strong>2024.02.28-20:15</strong>:', parse_mode='html')
@@ -137,15 +145,30 @@ async def remove_team(message: types.Message, state: FSMContext):
 async def set_score(message: types.Message, state: FSMContext):
     try:
         data = await state.get_data()
+        print(data)
+        stats_type = data['type']
         score_to_update = int(message.text)
         user = session.query(User).filter_by(name = data["username"]).first()
         if user:
-            user.quality_score = user.quality_score + score_to_update
-            session.commit()
+            if stats_type == 'За день':
+                DailyStats.update(user.id, quality_score = score_to_update)
+
+            if stats_type == 'За неделю':
+                WeeklyStats.update(user.id, quality_score = score_to_update)
+
+            if stats_type == 'За месец':
+                user.quality_score = user.quality_score + score_to_update
+                session.commit()
             await state.finish()
-            await message.answer(f'Сумма баллов для {data["username"]} успешно изменена')
+        await message.answer(f'Сумма баллов для {data["username"]} успешно изменена', reply_markup = get_admin_kb())
     except ValueError:
         await message.answer('Неверное количество баллов')
+
+
+async def choose_score_type(message: types.Message, state: FSMContext):
+    await message.answer('Введите сумму баллов:')
+    await state.update_data({"type": message.text})
+    await state.set_state(Users.SET_SCORE)
 
 
 async def set_braketime(message: types.Message, state: FSMContext):
@@ -484,6 +507,8 @@ async def remove_team_command(message: types.Message):
 def register_admin(dp: Dispatcher):
     dp.register_message_handler(choose_statistic, state = Users.CHOOSE_STATS_TYPE)
     dp.register_message_handler(set_user, IsAdmin(), lambda m: m.text in ('Обновить баллы менеджера', 'Установить время перерыва', 'Установить рабочее время', 'Обновить роль', 'Удалить менеджера'), state = "*")
+    
+    dp.register_message_handler(choose_score_type, IsAdmin(),state = Users.CHOOSE_STATS_TYPE_TO_SET)
     dp.register_message_handler(set_score, IsAdmin(), state = Users.SET_SCORE)
     dp.register_message_handler(set_braketime, IsAdmin(), state = Users.SET_BRAKETIME)
     dp.register_message_handler(set_workday_range, IsAdmin(), state = Users.SET_WORKDAY)
