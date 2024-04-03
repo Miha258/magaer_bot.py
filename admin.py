@@ -32,14 +32,7 @@ async def handle_user_option(message: types.Message, state: FSMContext):
     await state.finish()
     option = message.text
     if option == 'Статистика':
-        await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
-            [
-             [types.KeyboardButton('За месяц')],
-             [types.KeyboardButton('За неделю')],
-             [types.KeyboardButton('За день')]
-            ], 
-            resize_keyboard = True
-        ))
+        await message.answer('Выберите тип статистики', reply_markup = get_stats_type_kb())
         await state.set_state(Users.CHOOSE_STATS_TYPE)
     elif option == 'Создать команду':
         await state.set_state(Users.ADD_TEAM)
@@ -77,14 +70,7 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
             data['username'] = message.text
             action = data['action']
             if action == 'Обновить баллы менеджера':
-                await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
-                [
-                    [types.KeyboardButton('За месяц')],
-                    [types.KeyboardButton('За неделю')],
-                    [types.KeyboardButton('За день')]
-                ], 
-                resize_keyboard = True
-                ))
+                await message.answer('Выберите тип статистики', reply_markup = get_stats_type_kb())
                 await state.set_state(Users.CHOOSE_STATS_TYPE_TO_SET)
             elif action == 'Установить время перерыва':
                 await state.set_state(Users.SET_BRAKETIME)
@@ -94,11 +80,7 @@ async def procces_action_with_user(message: types.Message, state: FSMContext):
                 await message.answer('Введите время в формате <strong>01:00-22:00</strong>:', parse_mode='html')
             elif action == 'Обновить роль':
                 await state.set_state(Users.SET_ROLE)
-                await message.answer(f"Введите роль менеджера", reply_markup = types.ReplyKeyboardMarkup(keyboard = [
-                    [types.KeyboardButton('Тимлид')],
-                    [types.KeyboardButton('Афф-менеджер')],
-                    [types.KeyboardButton('Кволити-менеджер')]
-                ], resize_keyboard = True))
+                await message.answer(f"Введите роль менеджера", reply_markup = get_manager_type_kb())
             elif action == 'Удалить менеджера':
                 await remove_manager(message, state, message.text)
         else:

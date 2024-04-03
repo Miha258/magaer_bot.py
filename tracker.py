@@ -36,7 +36,6 @@ async def check_manager_delay(message: types.Message):
                 last_messages[message.chat.id] = message
             if not user and chat:
                 if '?' in message.text:
-                    await asyncio.sleep(1800)
                     user = session.query(User).filter_by(id = message.from_id).first()
                     if not user:
                         if last_messages.get(message.chat.id).message_id == message.message_id:

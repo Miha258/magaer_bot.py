@@ -32,7 +32,27 @@ def get_teamlead_kb():
     buttons = [
         types.KeyboardButton('Добавить в команду'),
         types.KeyboardButton('Удалить из команды'),
-        types.KeyboardButton('Статистика команды')
+        types.KeyboardButton('Статистика команды'),
+        types.KeyboardButton('Назад'),
     ]
     keyboard.add(*buttons)
     return keyboard
+
+def get_stats_type_kb():
+    return types.ReplyKeyboardMarkup(
+        [
+            [types.KeyboardButton('За месяц')],
+            [types.KeyboardButton('За неделю')],
+            [types.KeyboardButton('За день')],
+            [types.KeyboardButton('Назад')],
+        ], 
+        resize_keyboard = True
+    )
+
+def get_manager_type_kb():
+    return types.ReplyKeyboardMarkup(keyboard = [
+        [types.KeyboardButton('Тимлид')],
+        [types.KeyboardButton('Афф-менеджер')],
+        [types.KeyboardButton('Кволити-менеджер')],
+        [types.KeyboardButton('Назад')]
+    ], resize_keyboard = True)
