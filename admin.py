@@ -145,7 +145,6 @@ async def remove_team(message: types.Message, state: FSMContext):
 async def set_score(message: types.Message, state: FSMContext):
     try:
         data = await state.get_data()
-        print(data)
         stats_type = data['type']
         score_to_update = int(message.text)
         user = session.query(User).filter_by(name = data["username"]).first()
@@ -257,16 +256,13 @@ async def remove_manager(message: types.Message, state: FSMContext, username: st
         await message.answer('Менеджера с таким ID не существует')
 
 
-async def update_manager_score_command(message: types.Message):
+async def update_manager_score_command(message: types.Message, state: FSMContext):
     try:
         command_parts = message.text.split()
         user_id = command_parts[1]
         score_to_update = int(command_parts[2])
-        user = session.query(User).filter_by(name = user_id).first()
-        if user:
-            session.add(User(name = user_id, quality_score = user.quality_score + score_to_update))
-            session.commit()
-            await message.answer(f'Сумма баллов для {user.name} успешно изменена')
+        await state.set_data({'score': score_to_update, 'user_id': user_id})
+        
     except IndexError:
         await message.answer('Неправильное количество аргументов')
     except ValueError:
