@@ -486,7 +486,7 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(choose_statistic, state = Users.CHOOSE_STATS_TYPE)
     dp.register_message_handler(set_user, IsAdmin(), lambda m: m.text in ('Обновить баллы менеджера', 'Установить время перерыва', 'Установить рабочее время', 'Обновить роль', 'Удалить менеджера'), state = "*")
     
-    dp.register_message_handler(choose_score_type, IsAdmin(),state = Users.CHOOSE_STATS_TYPE_TO_SET)
+    dp.register_message_handler(choose_score_type, IsAdmin(), lambda m: m.text in (), state = Users.CHOOSE_STATS_TYPE_TO_SET)
     dp.register_message_handler(set_score, IsAdmin(), state = Users.SET_SCORE)
     dp.register_message_handler(set_braketime, IsAdmin(), state = Users.SET_BRAKETIME)
     dp.register_message_handler(set_workday_range, IsAdmin(), state = Users.SET_WORKDAY)
