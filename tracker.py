@@ -24,8 +24,9 @@ async def notify_admins(text: str, message_link: str):
             await bot.send_message(admin, text, reply_markup = types.InlineKeyboardMarkup(inline_keyboard=[[
                 types.InlineKeyboardButton('Перейти в чат', url = message_link)
             ]]))
-        except:
-            pass
+        except Exception as e:
+            print(e)
+            
 
 
 chats = []
