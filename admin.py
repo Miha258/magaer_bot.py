@@ -263,7 +263,7 @@ async def show_department_statistics(message: types.Message):
 
 
 async def show_department_statistics_weekly(message: types.Message):
-    response = "Статистика отдела за неделю:\n"
+    response = "Статистика отдела за неделю:\n {}"
     now = datetime.now()
     members = session.query(WeeklyStats).filter(
         WeeklyStats.start_day < now,
