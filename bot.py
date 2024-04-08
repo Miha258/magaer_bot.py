@@ -1,7 +1,7 @@
 from aiogram.utils import executor
 from aiogram import types
 from config import dp
-from admin import register_admin
+from admin import register_admin, bot
 from db import create_tables
 from config import admins
 from db import User, session

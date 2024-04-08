@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Time, M
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, time, timedelta
+import uuid
 
 DATABASE_URL = 'sqlite:///bots.db'
 engine = create_engine(DATABASE_URL)
@@ -44,7 +45,7 @@ class WeeklyStats(Base):
 
     @classmethod
     def update(cls, user_id, quality_score=None, average_reply_time=None, average_reply_worktime=None):
-        current_time = datetime.now()
+        current_time = datetime.now()   
         weekly_stats = None
         for stats in session.query(cls).filter_by(user_id = user_id).all():
             if stats.start_day < current_time and stats.end_day > current_time:
@@ -91,7 +92,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime = (daily_stats.average_reply_worktime + average_reply_worktime) / 2
         else:
-            daily_stats = cls(date = datetime.today(), user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime)
+            daily_stats = cls(date = datetime.today(), user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime, quality_score = 100 - quality_score if quality_score else None)
             session.add(daily_stats)
         session.commit()
 
@@ -102,6 +103,23 @@ class MonthlyStats(Base):
     quality_score = Column(Integer, default=100)
     average_reply_time = Column(Integer, default=0)
     average_reply_worktime = Column(Integer, default=0)
+
+
+
+class Tickets(Base):
+    __tablename__ = 'tickets'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    score = Column(Integer)
+    message_id = Column(Integer)
+    chat_id = Column(Integer)
+
+    @classmethod
+    def create(cls, user_id, score, message_id, chat_id):
+        ticket_id = int(str(uuid.uuid4().int)[:16])
+        ticket = cls(id = ticket_id, user_id = user_id, score = score, message_id = message_id, chat_id = chat_id)
+        session.add(ticket)
+        return ticket_id
 
 metadata = MetaData()
 
