@@ -4,6 +4,8 @@ from aiogram import types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import *
 from db import User, Chat, session, WeeklyStats, DailyStats, Tickets
+import validators
+
 
 class CheckManagerDelay(StatesGroup):
     AWAITING_REPLY = State()
@@ -65,7 +67,7 @@ async def check_manager_delay(message: types.Message):
             elif last_message.message_id != message.message_id:
                 last_messages[message.chat.id] = message
             if not user and chat:
-                if '?' in message.text:
+                if '?' in message.text and not validators.url(message.text):
                     await asyncio.sleep(1800)
                     user = session.query(User).filter_by(id = message.from_id).first()
                     if not user:

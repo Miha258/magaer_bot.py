@@ -4,9 +4,11 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime, time, timedelta
 import uuid
 
+
 DATABASE_URL = 'sqlite:///bots.db'
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -62,7 +64,7 @@ class WeeklyStats(Base):
         else:
             start_of_week = current_time - timedelta(days = current_time.weekday())
             end_of_week = start_of_week + timedelta(days=6)
-            weekly_stats = cls(user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime, start_day=start_of_week, end_day=end_of_week)
+            weekly_stats = cls(user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime, start_day=start_of_week, end_day=end_of_week, quality_score = 100 + quality_score if quality_score else None)
             session.add(weekly_stats)
         session.commit()
 
@@ -92,7 +94,7 @@ class DailyStats(Base):
             if average_reply_worktime:
                 daily_stats.average_reply_worktime = (daily_stats.average_reply_worktime + average_reply_worktime) / 2
         else:
-            daily_stats = cls(date = datetime.today(), user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime, quality_score = 100 - quality_score if quality_score else None)
+            daily_stats = cls(date = datetime.today(), user_id=user_id, average_reply_time=average_reply_time, average_reply_worktime=average_reply_worktime, quality_score = 100 + quality_score if quality_score else None)
             session.add(daily_stats)
         session.commit()
 
