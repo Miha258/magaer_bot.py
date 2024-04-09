@@ -67,7 +67,7 @@ async def check_manager_delay(message: types.Message):
                 last_message = message
             elif last_message.message_id != message.message_id:
                 last_messages[message.chat.id] = message
-            if not user and chat:
+            if not user and chat and message.from_user.username not in admins:
                 if '?' in message.text and not re.findall(url_regex, message.text):
                     await asyncio.sleep(1800)
                     user = session.query(User).filter_by(id = message.from_id).first()
