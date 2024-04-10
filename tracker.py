@@ -39,13 +39,18 @@ async def cancle_ticket(callback_data: types.CallbackQuery):
     if not user:
         return await callback_data.message.answer('Менеджер не найден')
     if ticket:
-        await callback_data.message.answer('Тикет успешно обработан!')
-        await bot.delete_message(ticket.chat_id, ticket.message_id)
         user.quality_score = user.quality_score + ticket.score
-        DailyStats.update(ticket.user_id, quality_score = ticket.score)
-        WeeklyStats.update(ticket.user_id, quality_score = ticket.score)
         session.delete(ticket)
         session.commit()
+
+        DailyStats.update(ticket.user_id, quality_score = ticket.score)
+        WeeklyStats.update(ticket.user_id, quality_score = ticket.score)
+
+        await callback_data.message.answer('Тикет успешно обработан!')
+        try:
+            await bot.delete_message(ticket.chat_id, ticket.message_id)
+        except Exception as e:
+            await callback_data.message.answer(f'Но не удалось удалить сообщения: {e}')
     else:
         await callback_data.message.answer('Тикет уже был обработан')
     await callback_data.message.delete_reply_markup()
@@ -54,7 +59,10 @@ chats = []
 async def check_manager_delay(message: types.Message):
     if message.chat.full_name not in chats:
         chats.append(message.chat.full_name)
-    print(chats)
+        
+    if message.chat.full_name != "Miha & Діана💄":
+        return
+
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
@@ -102,29 +110,32 @@ async def check_manager_delay(message: types.Message):
                                         if team_lead.paused < now:
                                             if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                                 tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
-                                                await notify_admins(f'🛎 Тегнул {team_lead.name} в канале {message.chat.full_name} 🛎', tag_msg.url)
+                                                ticket_id = await remove_score(team_lead.id, 0, tag_msg.message_id, message.chat.id)
+                                                await notify_admins(f'🛎 Тегнул {team_lead.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
                                     await asyncio.sleep(3600)
                                     user = session.query(User).filter_by(id = message.from_id).first()
                                     if not user:
                                         if last_messages.get(message.chat.id).message_id == message.message_id:
+                                            now = datetime.now()
+                                            if manager:
+                                                if manager.paused < now:
+                                                    ticket_id = await remove_score(manager.id, 5, tag_msg.message_id, message.chat.id)
+                                                    await notify_admins(f'🛑 Тегнул {manager.name} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
+                                            if team_lead.paused < now:
+                                                ticket_id = await remove_score(team_lead.id, 3, tag_msg.message_id, message.chat.id)
+                                            
                                             if manager:
                                                 if team_lead.paused < now and manager.paused < now:
                                                     if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
                                                         and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                                         tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
-                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {manager.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url())
+                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
                                             else:
                                                 if team_lead.paused < now:
                                                     if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
                                                         tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
-                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url())
+                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
                                             
-                                            now = datetime.now()
-                                            if manager:
-                                                if manager.paused < now:
-                                                    ticket_id = await remove_score(manager.id, 5, tag_msg.message_id, message.chat.id)
-                                            if team_lead.paused < now:
-                                                ticket_id = await remove_score(team_lead.id, 3, tag_msg.message_id, message.chat.id)
             elif user and chat:
                 if last_message:
                     if not session.query(User).filter_by(id = last_message.from_id).first() and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
@@ -167,7 +178,6 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
                 WeeklyStats.update(user_id, average_reply_time = reply_time)
                 DailyStats.update(user_id, average_reply_time = reply_time)
         session.commit()
-
 
 
 def register_tracker(dp: Dispatcher):
