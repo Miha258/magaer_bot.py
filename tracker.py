@@ -59,10 +59,6 @@ chats = []
 async def check_manager_delay(message: types.Message):
     if message.chat.full_name not in chats:
         chats.append(message.chat.full_name)
-        
-    if message.chat.full_name != "Miha & Діана💄":
-        return
-
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
