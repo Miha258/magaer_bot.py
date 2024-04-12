@@ -59,84 +59,91 @@ chats = []
 async def check_manager_delay(message: types.Message):
     if message.chat.full_name not in chats:
         chats.append(message.chat.full_name)
+    print(chats)
+    if message.chat.full_name != 'Miha test':
+        return
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
         user = session.query(User).filter_by(id = user_id).first()
         chat = session.query(Chat).filter_by(chat_id = message.chat.id).first()
-        if message.text:
-            last_message: types.Message = last_messages.get(message.chat.id)
-            if not last_message:
-                last_messages[message.chat.id] = message
-                last_message = message
-            elif last_message.message_id != message.message_id:
-                last_messages[message.chat.id] = message
-            if not user and chat and message.from_user.username not in admins:
-                if '?' in message.text and not re.findall(url_regex, message.text):
-                    await asyncio.sleep(1800)
-                    user = session.query(User).filter_by(id = message.from_id).first()
-                    if not user:
-                        if last_messages.get(message.chat.id).message_id == message.message_id:
-                            manager = None
-                            for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all():
-                                user = await bot.get_chat_member(message.chat.id, m.id)
-                                if user:
-                                    if user.status != "kicked" and user.status != "left" and user.status != "banned":
-                                        manager = m
-                            if manager:
+
+        messgae_text = message.caption if message.caption else message.text
+        
+        print(messgae_text)
+        last_message: types.Message = last_messages.get(message.chat.id)
+        if not last_message:
+            last_messages[message.chat.id] = message
+            last_message = message
+        elif last_message.message_id != message.message_id:
+            last_messages[message.chat.id] = message
+            
+        if not user and chat and message.from_user.username not in admins and messgae_text:
+            if '?' in message.text and not re.findall(url_regex, messgae_text):
+                await asyncio.sleep(20)
+                user = session.query(User).filter_by(id = message.from_id).first()
+                if not user:
+                    if last_messages.get(message.chat.id).message_id == message.message_id:
+                        manager = None
+                        for m in session.query(User).filter_by(team_id = chat.team_id, role = 'Афф-менеджер').all():
+                            user = await bot.get_chat_member(message.chat.id, m.id)
+                            if user:
+                                if user.status != "kicked" and user.status != "left" and user.status != "banned":
+                                    manager = m
+                        if manager:
+                            now = datetime.now()
+                            if manager.paused < now and manager.end_work_at > now.time() and manager.start_work_at < now.time():
+                                tag_msg = await message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
+                                ticket_id = await remove_score(manager.id, 1, tag_msg.message_id, message.chat.id)
+                                await notify_admins(f'🛎 Тегнул {manager.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
+                        await asyncio.sleep(3600)
+                        user = session.query(User).filter_by(id = message.from_id).first()
+                        if not user:
+                            if last_messages.get(message.chat.id).message_id == message.message_id:
+                                team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
                                 now = datetime.now()
-                                if manager.paused < now and manager.end_work_at > now.time() and manager.start_work_at < now.time():
-                                    tag_msg = await message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
-                                    ticket_id = await remove_score(manager.id, 1, tag_msg.message_id, message.chat.id)
-                                    await notify_admins(f'🛎 Тегнул {manager.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
-                            await asyncio.sleep(3600)
-                            user = session.query(User).filter_by(id = message.from_id).first()
-                            if not user:
-                                if last_messages.get(message.chat.id).message_id == message.message_id:
-                                    team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
-                                    now = datetime.now()
-                                    if manager:
-                                        if manager.paused < now or team_lead.paused < now:
-                                            if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
-                                                and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
-                                                tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
-                                                ticket_id = await remove_score(manager.id, 1, tag_msg.message_id, message.chat.id)
-                                                await notify_admins(f'🛎 Тегнул {team_lead.name} {manager.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
-                                    else:
+                                if manager:
+                                    if manager.paused < now or team_lead.paused < now:
+                                        if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
+                                            and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
+                                            tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
+                                            ticket_id = await remove_score(manager.id, 1, tag_msg.message_id, message.chat.id)
+                                            await notify_admins(f'🛎 Тегнул {team_lead.name} {manager.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
+                                else:
+                                    if team_lead.paused < now:
+                                        if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
+                                            tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
+                                            ticket_id = await remove_score(team_lead.id, 0, tag_msg.message_id, message.chat.id)
+                                            await notify_admins(f'🛎 Тегнул {team_lead.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
+                                await asyncio.sleep(3600)
+                                user = session.query(User).filter_by(id = message.from_id).first()
+                                if not user:
+                                    if last_messages.get(message.chat.id).message_id == message.message_id:
+                                        now = datetime.now()
+                                        if manager:
+                                            if manager.paused < now:
+                                                ticket_id = await remove_score(manager.id, 5, tag_msg.message_id, message.chat.id)
+                                                await notify_admins(f'🛑 Тегнул {manager.name} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
                                         if team_lead.paused < now:
-                                            if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
-                                                tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
-                                                ticket_id = await remove_score(team_lead.id, 0, tag_msg.message_id, message.chat.id)
-                                                await notify_admins(f'🛎 Тегнул {team_lead.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
-                                    await asyncio.sleep(3600)
-                                    user = session.query(User).filter_by(id = message.from_id).first()
-                                    if not user:
-                                        if last_messages.get(message.chat.id).message_id == message.message_id:
-                                            now = datetime.now()
-                                            if manager:
-                                                if manager.paused < now:
-                                                    ticket_id = await remove_score(manager.id, 5, tag_msg.message_id, message.chat.id)
-                                                    await notify_admins(f'🛑 Тегнул {manager.name} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
+                                            ticket_id = await remove_score(team_lead.id, 3, tag_msg.message_id, message.chat.id)
+                                        
+                                        if manager:
+                                            if team_lead.paused < now and manager.paused < now:
+                                                if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
+                                                    and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
+                                                    tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
+                                                    await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
+                                        else:
                                             if team_lead.paused < now:
-                                                ticket_id = await remove_score(team_lead.id, 3, tag_msg.message_id, message.chat.id)
-                                            
-                                            if manager:
-                                                if team_lead.paused < now and manager.paused < now:
-                                                    if manager.end_work_at > now.time() and manager.start_work_at < now.time() \
-                                                        and team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
-                                                        tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {manager.name} {head}")
-                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
-                                            else:
-                                                if team_lead.paused < now:
-                                                    if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
-                                                        tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
-                                                        await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
-                                            
-            elif user and chat:
-                if last_message:
-                    if not session.query(User).filter_by(id = last_message.from_id).first() and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
-                        print('calculated')
-                        calculate_average_reply_time(last_message, message)
+                                                if team_lead.end_work_at > now.time() and team_lead.start_work_at < now.time():
+                                                    tag_msg = await message.reply(f"Приносим извинения за задержку {team_lead.name} {head}")
+                                                    await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
+                                        
+        elif user and chat:
+            if last_message:
+                if not session.query(User).filter_by(id = last_message.from_id).first() and '?' in last_message.text and user.role in ('Тимлид', 'Афф-менеджер'):
+                    print('calculated')
+                    calculate_average_reply_time(last_message, message)
 
 async def remove_score(user_id: int, score: int, message_id: int, chat_id: int):
     user = session.query(User).filter_by(id=user_id).first()

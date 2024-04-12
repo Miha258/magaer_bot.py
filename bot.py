@@ -113,7 +113,7 @@ async def start(message: types.Message, state: FSMContext):
 Например: /personal_stats
 (Так же есть возможность добаить бота в чат)
     """)
-                
+
 
 @dp.message_handler(text = 'Назад', state = '*')
 async def back_to_admin_menu(message: types.Message, state: FSMContext):
