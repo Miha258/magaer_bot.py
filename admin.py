@@ -484,8 +484,10 @@ async def remove_team_command(message: types.Message):
 
 async def delete_messgae_command(message: types.Message):
     try:
-        reply_msg = message.reply_to_message
-        await reply_msg.delete()
+        command_parts = message.text.split()
+        chat_id = message.chat.id
+        message_url = command_parts[1]
+        await bot.delete_message(chat_id, message_url.split('/')[-1])
         await message.delete()
     except IndexError:
         await message.answer('Неудалося удалить сообщения')
@@ -495,7 +497,7 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(choose_statistic, state = Users.CHOOSE_STATS_TYPE)
     dp.register_message_handler(set_user, IsAdmin(), lambda m: m.text in ('Обновить баллы менеджера', 'Установить время перерыва', 'Установить рабочее время', 'Обновить роль', 'Удалить менеджера'), state = "*")
     
-    dp.register_message_handler(delete_messgae_command, IsAdmin(), commands = ['delete_message'])
+    dp.register_message_handler(delete_messgae_command, commands = ['delete_message'])
     dp.register_message_handler(choose_score_type, IsAdmin(), lambda m: m.text in ('За день', 'За неделю', 'За месяц'), state = Users.CHOOSE_STATS_TYPE_TO_SET)
     dp.register_message_handler(set_score, IsAdmin(), state = Users.SET_SCORE)
     dp.register_message_handler(set_braketime, IsAdmin(), state = Users.SET_BRAKETIME)
