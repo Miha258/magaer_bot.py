@@ -15,6 +15,8 @@ async def show_personal_statistics(message: types.Message):
         response += f"<strong>Конец рабочего времени:</strong> {':'.join(str(user.end_work_at).split(':')[:-1])}\n"
         response += f"<strong>Среднее время ответа в рабочее время:</strong> {avrg_worktime:.2f} мин.\n"
         response += f"<strong>Среднее время ответа в нерабочее время:</strong> {avrg_time:.2f} мин.\n"
+        if user.paused > datetime.now():
+            response += f'<strong>Перерыв до: </strong>" + {datetime.strftime(user.paused, "%Y.%m.%d-%H:%M")}'
         await message.answer(response, parse_mode='html')
     else:
         await message.answer("Вы не зарегистрированы в системе.")
