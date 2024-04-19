@@ -60,6 +60,9 @@ async def check_manager_delay(message: types.Message):
     if message.chat.full_name not in chats:
         chats.append(message.chat.full_name)
 
+    if message.chat.full_name != "Тест бота":
+        return
+
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
@@ -76,7 +79,7 @@ async def check_manager_delay(message: types.Message):
             
         if not user and chat and message.from_user.username not in admins and messgae_text:
             if '?' in messgae_text and not re.findall(url_regex, messgae_text):
-                await asyncio.sleep(1800)
+                await asyncio.sleep(15)
                 user = session.query(User).filter_by(id = message.from_id).first()
                 if not user:
                     if last_messages.get(message.chat.id).message_id == message.message_id:
@@ -92,7 +95,7 @@ async def check_manager_delay(message: types.Message):
                                 tag_msg = await message.reply(f"Из-за высокой загруженности время ответа менеджера увеличивается, просим немного Вашего терпения! {manager.name}")
                                 ticket_id = await remove_score(manager.id, 1, tag_msg.message_id, message.chat.id)
                                 await notify_admins(f'🛎 Тегнул {manager.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
-                        await asyncio.sleep(3600)
+                        await asyncio.sleep(15)
                         user = session.query(User).filter_by(id = message.from_id).first()
                         if not user:
                             if last_messages.get(message.chat.id).message_id == message.message_id:
@@ -111,7 +114,7 @@ async def check_manager_delay(message: types.Message):
                                             tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name}")
                                             ticket_id = await remove_score(team_lead.id, 0, tag_msg.message_id, message.chat.id)
                                             await notify_admins(f'🛎 Тегнул {team_lead.name} в канале {message.chat.full_name} 🛎', tag_msg.url, ticket_id)
-                                await asyncio.sleep(3600)
+                                await asyncio.sleep(15)
                                 user = session.query(User).filter_by(id = message.from_id).first()
                                 if not user:
                                     if last_messages.get(message.chat.id).message_id == message.message_id:
