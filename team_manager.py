@@ -11,6 +11,8 @@ class Teams(StatesGroup):
     REMOVE_MEMBER = State()
     ADD_MEMBER = State()
     CHOOSE_STATS_TYPE = State()
+    CHAT_MESSAGE = State()
+    
 
 
 async def show_team_statistics(message: types.Message):
@@ -164,7 +166,25 @@ async def handle_user_option(message: types.Message, state: FSMContext):
             resize_keyboard = True
         ))
         await state.set_state(Teams.CHOOSE_STATS_TYPE)
+    elif action == 'Отправить сообщение в чаты':
+        await message.answer('Введите сообщение для отправки:')
+        await state.set_state(Teams.CHAT_MESSAGE)
 
+
+
+async def send_message_to_team(message: types.Message, state: FSMContext):
+    await state.finish()
+    user = session.query(User).filter_by(id = message.from_id).first()
+    chats = session.query(Chat).filter_by(team_id = user.team_id).all()
+    message_text = message.text
+    counter = 0
+    for chat in chats:
+        try:
+            await bot.send_message(chat.chat_id, message_text)
+            counter += 1
+        except Exception as e:
+            await message.answer(f"Ошибка при отправке сообщение в чат {chat.chat_id}: {e}")
+    await message.answer(f'Количество отправленных сообщений: <strong>{counter}</strong>', parse_mode = "html")
 
 
 async def add_member_to_team(message: types.Message, state: FSMContext):
@@ -230,4 +250,5 @@ def register_teamlead(dp: Dispatcher):
     dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды', 'Статистика команды'))
     dp.register_message_handler(add_member_to_team, IsTeamlead(), state = Teams.ADD_MEMBER)
     dp.register_message_handler(remove_member_from_team, IsTeamlead(), state = Teams.REMOVE_MEMBER)
+    dp.register_message_handler(send_message_to_team, IsTeamlead(), state = Teams.CHAT_MESSAGE)
     dp.register_message_handler(add_bot_to_chat, lambda m: m.new_chat_members[0].id == bot.id if m.new_chat_members else m.left_chat_member.id == bot.id if m.left_chat_member else False, content_types = types.ContentTypes.NEW_CHAT_MEMBERS | types.ContentTypes.LEFT_CHAT_MEMBER)
