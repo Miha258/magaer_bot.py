@@ -188,4 +188,4 @@ def calculate_average_reply_time(message: types.Message, reply_to_message: types
 
 def register_tracker(dp: Dispatcher):
     dp.register_callback_query_handler(cancle_ticket, lambda cb: "cancle_ticket" in cb.data)
-    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup', 'channel'), content_types = [types.ContentType.TEXT, types.ContentType.VIDEO, types.ContentType.PHOTO, types.ContentType.ANIMATION, types.ContentType.DOCUMENT, types.ContentType.AUDIO], state="*")
+    dp.register_message_handler(check_manager_delay, lambda m: m is not None and m.chat.type in ('group', 'supergroup', 'channel'), content_types = [types.ContentType.TEXT, types.ContentType.VIDEO, types.ContentType.PHOTO, types.ContentType.ANIMATION, types.ContentType.DOCUMENT, types.ContentType.VOICE, types.ContentType.AUDIO], state="*")
