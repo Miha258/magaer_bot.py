@@ -34,6 +34,7 @@ async def notify_admins(text: str, message_link: str, ticket_id: int = None):
 url_regex = r'\b(?:https?|ftp)://[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]'  
 async def cancle_ticket(callback_data: types.CallbackQuery):
     ticket_id = int(callback_data.data.split('_')[-1])
+    print(ticket_id)
     ticket = session.query(Tickets).filter_by(id = ticket_id).first()
     user = session.query(User).filter_by(id = ticket.user_id).first()
     if not user:
@@ -107,6 +108,7 @@ async def check_manager_delay(message: types.Message):
                                             and team_lead.start_work_at <= now.time() <= team_lead.end_work_at:
                                             tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                                             ticket_id = await remove_score(manager.id, 3, tag_msg.message_id, message.chat.id)
+                                            print(ticket_id)
                                             await notify_admins(f'🛎 Тегнул {team_lead.name} {manager.name} в канале {message.chat.full_name} 🛎', await message.chat.get_url(), ticket_id)
                                 else:
                                     if team_lead.paused < now:
