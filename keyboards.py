@@ -34,7 +34,6 @@ def get_teamlead_kb():
         types.KeyboardButton('Удалить из команды'),
         types.KeyboardButton('Статистика команды'),
         types.KeyboardButton('Отправить сообщение в чаты'),
-        types.KeyboardButton('Назад'),
     ]
     keyboard.add(*buttons)
     return keyboard
