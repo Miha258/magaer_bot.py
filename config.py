@@ -3,7 +3,7 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 head = "@Danil_Cataffs"
-admins = ["m1i1ha", 'gleb_cataffs', 'Danil_Cataffs']
+admins = ["m1i1ha", 'Viktoria_cataffs', 'gleb_cataffs', 'Danil_Cataffs']
 admin_ids = [1095610815, 6653984089]
 
 TOKEN = "7059450347:AAFkpI7q1SAPPPjqXE738EfBhB0J7ByRJTs"
