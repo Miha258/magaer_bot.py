@@ -34,7 +34,6 @@ async def notify_admins(text: str, message_link: str, ticket_id: int = None):
 url_regex = r'\b(?:https?|ftp)://[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]'  
 async def cancle_ticket(callback_data: types.CallbackQuery):
     ticket_id = int(callback_data.data.split('_')[-1])
-    print(ticket_id)
     ticket = session.query(Tickets).filter_by(id = ticket_id).first()
     user = session.query(User).filter_by(id = ticket.user_id).first()
     if not user:
@@ -63,7 +62,6 @@ async def check_manager_delay(message: types.Message):
 
     if message.chat.full_name != "Тест бота":
         return
-    print(1234)
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
@@ -108,7 +106,6 @@ async def check_manager_delay(message: types.Message):
                                             and team_lead.start_work_at <= now.time() <= team_lead.end_work_at:
                                             tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                                             ticket_id = await remove_score(manager.id, 3, tag_msg.message_id, message.chat.id)
-                                            print(ticket_id)
                                             await notify_admins(f'🛎 Тегнул {team_lead.name} {manager.name} в канале {message.chat.full_name} 🛎', await message.chat.get_url(), ticket_id)
                                 else:
                                     if team_lead.paused < now:
@@ -133,10 +130,10 @@ async def check_manager_delay(message: types.Message):
                                         
                                         now = message.date
                                         if manager:
-                                            if manager.paused < now:
+                                            if manager.paused < now and manager.start_work_at <= now.time() <= manager.end_work_at:
                                                 ticket_id = await remove_score(manager.id, 5, tag_msg.message_id, message.chat.id)
                                                 await notify_admins(f'🛑 Тегнул {manager.name} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
-                                        if team_lead.paused < now:
+                                        if team_lead.paused < now and team_lead.start_work_at <= now.time() <= team_lead.end_work_at:
                                             ticket_id = await remove_score(team_lead.id, 3, tag_msg.message_id, message.chat.id)
                                             await notify_admins(f'🛑 Тегнул {team_lead.name} {head} в канале {message.chat.full_name} 🛑', await message.chat.get_url(), ticket_id)
         elif user and chat:
