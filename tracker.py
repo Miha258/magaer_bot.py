@@ -101,7 +101,7 @@ async def check_manager_delay(message: types.Message):
                                 team_lead = session.query(User).filter_by(team_id = chat.team_id, role = 'Тимлид').first()
                                 now = message.date
                                 if manager:
-                                    if manager.paused < now or team_lead.paused < now:
+                                    if manager.paused < now and team_lead.paused < now:
                                         if manager.start_work_at <= now.time() <= manager.end_work_at \
                                             and team_lead.start_work_at <= now.time() <= team_lead.end_work_at:
                                             tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
