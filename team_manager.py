@@ -247,7 +247,7 @@ def register_teamlead(dp: Dispatcher):
     dp.register_message_handler(show_team_statistics_daily, IsTeamlead(), commands = ['team_stats_daily'])
     dp.register_message_handler(add_member_to_team_command, IsTeamlead(), commands=['add_member_to_team'])
     dp.register_message_handler(remove_member_from_team_command, IsTeamlead(), commands=['remove_member_from_team'])
-    dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды', 'Статистика команды'))
+    dp.register_message_handler(handle_user_option, IsTeamlead(), lambda m: m.text in ('Добавить в команду', 'Удалить из команды', 'Статистика команды', 'Отправить сообщение в чаты'))
     dp.register_message_handler(add_member_to_team, IsTeamlead(), state = Teams.ADD_MEMBER)
     dp.register_message_handler(remove_member_from_team, IsTeamlead(), state = Teams.REMOVE_MEMBER)
     dp.register_message_handler(send_message_to_team, IsTeamlead(), state = Teams.CHAT_MESSAGE)
