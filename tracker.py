@@ -118,6 +118,7 @@ async def check_manager_delay(message: types.Message):
                                 user = session.query(User).filter_by(id = message.from_id).first()
                                 if not user:
                                     if last_messages.get(message.chat.id).message_id == message.message_id:
+                                        tag_msg = None
                                         if manager and team_lead:
                                             if team_lead.paused < now and manager.paused < now:
                                                 if manager.start_work_at <= now.time() <= manager.end_work_at \
