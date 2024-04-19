@@ -110,7 +110,7 @@ async def check_manager_delay(message: types.Message):
                                         tag_msg = await message.reply(f"Приносим извинения за задержку, скоро будет ответ {team_lead.name} {manager.name}")
                                         ticket_id = await remove_score(manager.id, 3, tag_msg.message_id, message.chat.id)
                                         await notify_admins(f'🛎 Тегнул {team_lead.name} {manager.name} в канале {message.chat.full_name} 🛎', await message.chat.get_url(), ticket_id)
-                                else
+                                else:
                                     if team_lead.paused > now:
                                         return
                                     if team_lead.start_work_at <= now.time() <= team_lead.end_work_at:
