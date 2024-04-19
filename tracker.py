@@ -90,6 +90,7 @@ async def check_manager_delay(message: types.Message):
                                     manager = m
                         if manager:
                             now = message.date
+                            print(manager.paused, now)
                             if manager.paused < now:
                                 return
                             if manager.start_work_at <= now.time() <= manager.end_work_at:
