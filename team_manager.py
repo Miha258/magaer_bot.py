@@ -151,10 +151,11 @@ async def add_bot_to_chat(message: types.Message):
 
 async def handle_user_option(message: types.Message, state: FSMContext):
     action = message.text
-    await message.answer('Введите @username:')
     if action == 'Добавить в команду':
+        await message.answer('Введите @username:')
         await state.set_state(Teams.ADD_MEMBER)
     elif action == 'Удалить из команды':
+        await message.answer('Введите @username:')
         await state.set_state(Teams.REMOVE_MEMBER)
     elif action == 'Статистика команды':
         await message.answer('Выберите тип статистики', reply_markup = types.ReplyKeyboardMarkup(
