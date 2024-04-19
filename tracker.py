@@ -62,7 +62,7 @@ async def check_manager_delay(message: types.Message):
 
     if message.chat.full_name != "Тест бота":
         return
-
+    print(1234)
     week_day = datetime.today().weekday()
     if week_day != 5 and week_day != 6:
         user_id = message.from_id
