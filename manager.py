@@ -10,7 +10,7 @@ async def show_personal_statistics(message: types.Message):
     if user:
         avrg_worktime = user.average_reply_worktime / 60 if user.average_reply_worktime else 0 
         avrg_time = user.average_reply_time / 60 if user.average_reply_time else 0
-     
+    
         avrg_worktime_secs = int(avrg_worktime % floor(avrg_worktime) * 100)
         avrg_time_secs = int(avrg_time % floor(avrg_time) * 100)
         response = f"<strong>Личная статистика:</strong>\n\n"

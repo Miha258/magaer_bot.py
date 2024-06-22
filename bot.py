@@ -1,7 +1,8 @@
+import threading
 from aiogram.utils import executor
 from aiogram import types
 from config import dp
-from admin import register_admin, bot
+from admin import register_admin
 from db import create_tables
 from config import admins
 from db import User, session
@@ -11,6 +12,9 @@ from quality_manager import register_quality_manager
 from manager import register_aff_manager
 from aiogram.dispatcher import FSMContext
 from keyboards import *
+from scheduler import Scheduler
+import time, datetime
+
 
 @dp.message_handler(commands=['start'], state = '*')
 async def start(message: types.Message, state: FSMContext):
@@ -121,6 +125,24 @@ async def back_to_admin_menu(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+def update_stats():
+    today = datetime.datetime.now()
+    if today.day == 1:
+        for user in session.query(User).all():
+            user.average_reply_time = 0
+            user.average_reply_worktime = 0
+            user.quality_score = 100
+        session.commit()
+
+
+schedule = Scheduler()
+schedule.hourly(datetime.time(minute = 1), update_stats)
+
+def run_tasks():
+    while True:
+        schedule.exec_jobs()
+        time.sleep(1)
+
 if __name__ == '__main__':
     register_admin(dp)
     register_teamlead(dp)
@@ -128,4 +150,5 @@ if __name__ == '__main__':
     register_quality_manager(dp)
     register_tracker(dp)
     create_tables()
+    threading.Thread(target = lambda: run_tasks()).start()
     executor.start_polling(dp, skip_updates = True)
