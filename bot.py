@@ -136,7 +136,7 @@ def update_stats():
 
 
 schedule = Scheduler()
-schedule.hourly(datetime.time(minute = 1), update_stats)
+schedule.daily(datetime.time(minute = 1), update_stats)
 
 def run_tasks():
     while True:
